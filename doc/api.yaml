@@ -292,7 +292,7 @@ paths:
           schema:
             type: integer
             example: 1
-            description: The id of the tonversation to send the message
+            description: The id of the conversation to send the message
       requestBody:
         description: Message details
         required: true
@@ -510,7 +510,7 @@ components:
           type: string
           enum: [chat, group]
           example: group
-        partecipants:
+        participants:
           type: array
           items:
             $ref: "#/components/schemas/user"
