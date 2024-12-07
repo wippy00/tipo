@@ -41,6 +41,9 @@ type AppDatabase interface {
 	GetName() (string, error)
 	SetName(name string) error
 
+	// User
+	GetUsers() ([]User, error)
+
 	Ping() error
 }
 
@@ -55,14 +58,97 @@ func New(db *sql.DB) (AppDatabase, error) {
 		return nil, errors.New("database is required when building a AppDatabase")
 	}
 
-	// Check if table exists. If not, the database is empty, and we need to create the structure
+	// Check if table existSs. If not, the database is empty, and we need to create the structure
 	var tableName string
-	err := db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='example_table';`).Scan(&tableName)
+	err := db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='users';`).Scan(&tableName)
 	if errors.Is(err, sql.ErrNoRows) {
-		sqlStmt := `CREATE TABLE example_table (id INTEGER NOT NULL PRIMARY KEY, name TEXT);`
-		_, err = db.Exec(sqlStmt)
+		// ############################################################
+		// ###						user							###
+		// ############################################################
+		user_table := `CREATE TABLE IF NOT EXISTS users (
+			id INTEGER NOT NULL PRIMARY KEY, 
+			name VARCHAR(30) NOT NULL,
+			photo BLOB
+		);`
+		_, err = db.Exec(user_table)
 		if err != nil {
-			return nil, fmt.Errorf("error creating database structure: %w", err)
+			return nil, fmt.Errorf("error creating database structure user: %w", err)
+		}
+		// ############################################################
+		// ###					conversations						###
+		// ############################################################
+		conversations_table := `CREATE TABLE IF NOT EXISTS conversations (
+			id INTEGER NOT NULL PRIMARY KEY, 
+			type TEXT NOT NULL,
+			photo BLOB,
+			name VARCHAR(50)
+		);`
+		_, err = db.Exec(conversations_table)
+		if err != nil {
+			return nil, fmt.Errorf("error creating database structure conversations: %w", err)
+		}
+		// ############################################################
+		// ###				conversations_members					###
+		// ############################################################
+		conversations_members_table := `CREATE TABLE IF NOT EXISTS conversations_members (
+			id_conversations INTEGER NOT NULL, 
+			id_user INTEGER NOT NULL,
+	
+			FOREIGN KEY (id_conversations) REFERENCES conversations(id),
+			FOREIGN KEY (id_user) REFERENCES users(id)
+		);`
+		_, err = db.Exec(conversations_members_table)
+		if err != nil {
+			return nil, fmt.Errorf("error creating database structure conversations_members: %w", err)
+		}
+		// ############################################################
+		// ###						messages						###
+		// ############################################################
+		messages_table := `CREATE TABLE IF NOT EXISTS messages (
+			id INTEGER NOT NULL PRIMARY KEY, 
+			text TEXT,
+			photo BLOB,
+			sender INT NOT NULL,
+			reciver INT NOT NULL,
+			forwarded_to INT,
+			timestamp TEXT DEFAULT CURRENT_TIMESTAMP,
+			
+			FOREIGN KEY (sender) REFERENCES users(id),
+			FOREIGN KEY (reciver) REFERENCES conversations(id),
+			FOREIGN KEY (forwarded_to) REFERENCES conversations(id)
+		);`
+		_, err = db.Exec(messages_table)
+		if err != nil {
+			return nil, fmt.Errorf("error creating database structure messages: %w", err)
+		}
+		// ############################################################
+		// ###					messages_readers					###
+		// ############################################################
+		messages_readers_table := `CREATE TABLE IF NOT EXISTS messages_readers (
+			id_user INTEGER NOT NULL PRIMARY KEY,
+			id_message INTEGER NOT NULL,
+			
+			FOREIGN KEY (id_user) REFERENCES users(id),
+			FOREIGN KEY (id_message) REFERENCES messages(id)
+		);`
+		_, err = db.Exec(messages_readers_table)
+		if err != nil {
+			return nil, fmt.Errorf("error creating database structure messages_readers: %w", err)
+		}
+		// ############################################################
+		// ###						reactions						###
+		// ############################################################
+		reactions_table := `CREATE TABLE IF NOT EXISTS reactions (
+			id_user INTEGER NOT NULL PRIMARY KEY,
+			id_message INTEGER NOT NULL,
+			reaction VARCHAR(3) NOT NULL,
+			
+			FOREIGN KEY (id_user) REFERENCES users(id),
+			FOREIGN KEY (id_message) REFERENCES messages(id)
+		);`
+		_, err = db.Exec(reactions_table)
+		if err != nil {
+			return nil, fmt.Errorf("error creating database structure reactions: %w", err)
 		}
 	}
 
