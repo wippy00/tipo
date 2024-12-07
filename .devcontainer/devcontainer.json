@@ -17,8 +17,12 @@
 	},
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	"forwardPorts": [3000, 8080]
+	"forwardPorts": [3000, 8080],
 
+	// Mount the local project directory to the container
+	"mounts": [
+		"source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+	]
 	// Configure tool-specific properties.
 	// "customizations": {},
 
