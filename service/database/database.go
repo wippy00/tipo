@@ -43,6 +43,8 @@ type AppDatabase interface {
 
 	// User
 	GetUsers() ([]User, error)
+	// GetUser(id int64) (User, error)
+	// AddUser(user User) error
 
 	Ping() error
 }
@@ -79,9 +81,9 @@ func New(db *sql.DB) (AppDatabase, error) {
 		// ############################################################
 		conversations_table := `CREATE TABLE IF NOT EXISTS conversations (
 			id INTEGER NOT NULL PRIMARY KEY, 
-			type TEXT NOT NULL,
+			name VARCHAR(50) NOT NULL,
 			photo BLOB,
-			name VARCHAR(50)
+			cnv_type TEXT NOT NULL
 		);`
 		_, err = db.Exec(conversations_table)
 		if err != nil {
@@ -108,13 +110,13 @@ func New(db *sql.DB) (AppDatabase, error) {
 			id INTEGER NOT NULL PRIMARY KEY, 
 			text TEXT,
 			photo BLOB,
-			sender INT NOT NULL,
-			reciver INT NOT NULL,
+			author INT NOT NULL,
+			recipient INT NOT NULL,
 			forwarded_to INT,
 			timestamp TEXT DEFAULT CURRENT_TIMESTAMP,
 			
-			FOREIGN KEY (sender) REFERENCES users(id),
-			FOREIGN KEY (reciver) REFERENCES conversations(id),
+			FOREIGN KEY (author) REFERENCES users(id),
+			FOREIGN KEY (recipient) REFERENCES conversations(id),
 			FOREIGN KEY (forwarded_to) REFERENCES conversations(id)
 		);`
 		_, err = db.Exec(messages_table)
