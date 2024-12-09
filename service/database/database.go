@@ -42,6 +42,8 @@ type AppDatabase interface {
 	SetName(name string) error
 
 	// User
+	LoginUser(name string) (User, error)
+
 	GetUsers() ([]User, error)
 	// GetUser(id int64) (User, error)
 	// AddUser(user User) error
