@@ -43,9 +43,11 @@ type AppDatabase interface {
 
 	// User
 	LoginUser(name string) (User, error)
+	UpdateUserName(id int64, name string) (User, error)
+	UpdateUserPhoto(id int64, photo []byte) (User, error)
 
 	GetUsers() ([]User, error)
-	// GetUser(id int64) (User, error)
+	GetUser(id int64) (User, error)
 	// AddUser(user User) error
 
 	Ping() error
