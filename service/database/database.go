@@ -42,10 +42,10 @@ type AppDatabase interface {
 	SetName(name string) error
 
 	// User
-	LoginUser(name string) (User, error)
+	LoginUser(name string) (User, bool, error)
 	UpdateUserName(id int64, name string) (User, error)
 	UpdateUserPhoto(id int64, photo []byte) (User, error)
-
+	UserExistById(id int64) (User, bool, error)
 	GetUsers() ([]User, error)
 	GetUser(id int64) (User, error)
 	// AddUser(user User) error

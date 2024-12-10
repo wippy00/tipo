@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -65,39 +64,26 @@ func (rt *_router) getUsers(w http.ResponseWriter, r *http.Request, ps httproute
 // 	w.WriteHeader(http.StatusCreated)
 // }
 
-func (rt *_router) updateUsername(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	var respUser User
-
-	if err := json.NewDecoder(r.Body).Decode(&respUser); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	dbUser, err := rt.db.UpdateUserName(respUser.Id, respUser.Name)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("content-type", "application/json")
-	userJSON, err := json.Marshal(NewUser(dbUser))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	_, _ = w.Write(userJSON)
-
-}
-
 func (rt *_router) updateUserName(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var respUser User
 
+	id, hasAut, err := checkAuth(r, rt)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	if !hasAut {
+		http.Error(w, "not authorized to change user name", http.StatusUnauthorized)
+		return
+	}
+
 	if err := json.NewDecoder(r.Body).Decode(&respUser); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	dbUser, err := rt.db.UpdateUserName(respUser.Id, respUser.Name)
+	dbUser, err := rt.db.UpdateUserName(id, respUser.Name)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -116,11 +102,14 @@ func (rt *_router) updateUserName(w http.ResponseWriter, r *http.Request, ps htt
 func (rt *_router) updateUserPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var respUser User
 
-	id_str := r.FormValue("id")
-
-	id, err := strconv.Atoi(id_str)
+	id, hasAut, err := checkAuth(r, rt)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	if !hasAut {
+		http.Error(w, "not authorized to change user photo", http.StatusUnauthorized)
 		return
 	}
 
@@ -135,8 +124,7 @@ func (rt *_router) updateUserPhoto(w http.ResponseWriter, r *http.Request, ps ht
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	respUser.Id = int64(id)
+	respUser.Id = id
 	respUser.Photo = photo
 
 	dbUser, err := rt.db.UpdateUserPhoto(respUser.Id, respUser.Photo)
