@@ -85,23 +85,26 @@ func (db *appdbimpl) AddUser(user User) (User, error) {
 	return user, nil
 }
 
-func (db *appdbimpl) LoginUser(name string) (User, bool, error) {
+func (db *appdbimpl) LoginUser(name string) (user User, isNew bool, err error) {
 
+	// check if user exists
 	user, exist, err := db.UserExistByName(name)
 	if err != nil {
 		return user, false, fmt.Errorf("error checking user existence: %w", err)
 	}
 
+	// if exist return user	and isNew = false
 	if exist {
 		return user, false, nil
 	}
 
+	// if not exist return added user	and isNew = true
 	added_user, err := db.AddUser(User{Name: name})
 	if err != nil {
-		return user, false, fmt.Errorf("error adding user: %w", err)
+		return added_user, false, fmt.Errorf("error adding user: %w", err)
 	}
 
-	return added_user, false, nil
+	return added_user, true, nil
 }
 
 func (db *appdbimpl) UpdateUserName(id int64, new_name string) (User, error) {
