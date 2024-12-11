@@ -22,9 +22,19 @@
 	// Mount the local project directory to the container
 	"mounts": [
 		"source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
-	]
+	],
+
 	// Configure tool-specific properties.
-	// "customizations": {},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"alexcvzz.vscode-sqlite",
+				"streetsidesoftware.code-spell-checker"
+			]
+		}
+	},
+
+	"postCreateCommand": "mkdir /tmp/wasa-database"
 
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"
