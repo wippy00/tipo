@@ -1,0 +1,21 @@
+FROM node:20-alpine AS builder
+
+# Create a working directory
+WORKDIR /workspace
+
+# Copy necessary files
+COPY webui/ .
+
+# Install dependencies
+RUN yarn install
+
+# Build the project
+RUN yarn run build-prod
+
+FROM nginx:alpine
+
+# Copy built files
+COPY --from=builder /workspace/dist /usr/share/nginx/html
+
+# Expose communication ports
+EXPOSE 80

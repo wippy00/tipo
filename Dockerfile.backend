@@ -1,0 +1,36 @@
+FROM golang:1.23-alpine AS builder
+
+# Install gcc e musl-dev
+RUN apk add gcc musl-dev
+
+# Create a working directory
+WORKDIR /workspace
+
+# Copy necessary files
+COPY cmd/ cmd/
+COPY service/ service/
+COPY vendor/ vendor/
+COPY go.mod .
+COPY go.sum .
+
+# Build the project
+RUN CGO_ENABLED=1 go build -o /workspace/wasa-api ./cmd/webapi
+
+
+FROM alpine:latest
+
+# Create a working directory
+WORKDIR /usr/src/app
+
+# Copy built files
+COPY --from=builder /workspace/wasa-api ./
+
+RUN chmod +x /usr/src/app/wasa-api
+
+RUN mkdir /tmp/wasa-database
+
+# Expose communication ports
+EXPOSE 3000
+
+# Start the application
+CMD ["./wasa-api"]
