@@ -50,6 +50,10 @@ type AppDatabase interface {
 	GetUser(id int64) (User, error)
 	// AddUser(user User) error
 
+	// Conversation
+	GetConversation(id int64) ([]Conversation, error)
+	GetConversationOfUser(id int64) ([]Conversation, error)
+
 	Ping() error
 }
 

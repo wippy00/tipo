@@ -24,11 +24,11 @@ type User struct {
 // 	reaction string
 // }
 
-// type Conversation struct {
-// 	Id           int
-// 	name         string
-// 	photo        []byte
-// 	cnv_type     string
-// 	participants []User
-// 	messages     []Message
-// }
+type Conversation struct {
+	Id           int64  `json:"id"`
+	Name         string `json:"name"`
+	Photo        []byte `json:"photo"`
+	CnvType      string `json:"cnvType"`
+	Participants []User `json:"participants"`
+	// messages     []Message `json:"messages"`
+}
