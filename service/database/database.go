@@ -51,8 +51,10 @@ type AppDatabase interface {
 	// AddUser(user User) error
 
 	// Conversation
-	GetConversation(id int64) ([]Conversation, error)
-	GetConversationOfUser(id int64) ([]Conversation, error)
+	GetConversation(id int64) (Conversation, error)
+	GetConversationsOfUser(id int64) ([]Conversation, error)
+	UpdateConversationName(id int64, new_name string) (Conversation, error)
+	UpdateConversationPhoto(id int64, new_photo []byte) (Conversation, error)
 
 	Ping() error
 }

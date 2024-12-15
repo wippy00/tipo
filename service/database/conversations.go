@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-func (db *appdbimpl) GetConversation(id int64) ([]Conversation, error) {
+func (db *appdbimpl) GetConversation(id int64) (Conversation, error) {
 	var conversations []Conversation
 
 	rows, err := db.c.Query(`
@@ -32,7 +32,7 @@ func (db *appdbimpl) GetConversation(id int64) ([]Conversation, error) {
 		participants.id; 
 	`, id)
 	if err != nil {
-		return conversations, fmt.Errorf("error getting conversation: %w", err)
+		return Conversation{}, fmt.Errorf("error getting conversation: %w", err)
 	}
 	defer rows.Close()
 
@@ -51,7 +51,7 @@ func (db *appdbimpl) GetConversation(id int64) ([]Conversation, error) {
 			&participant.Name,
 			&participant.Photo,
 		); err != nil {
-			return conversations, fmt.Errorf("error getting conversation row: %w", err)
+			return Conversation{}, fmt.Errorf("error getting conversation row: %w", err)
 		}
 
 		// Verifica e crea la conversazione se non esiste
@@ -85,10 +85,10 @@ func (db *appdbimpl) GetConversation(id int64) ([]Conversation, error) {
 		conversations = append(conversations, *conv)
 	}
 
-	return conversations, nil
+	return Conversation{}, nil
 }
 
-func (db *appdbimpl) GetConversationOfUser(id int64) ([]Conversation, error) {
+func (db *appdbimpl) GetConversationsOfUser(id int64) ([]Conversation, error) {
 	var conversations []Conversation
 
 	rows, err := db.c.Query(`
@@ -170,4 +170,52 @@ func (db *appdbimpl) GetConversationOfUser(id int64) ([]Conversation, error) {
 	}
 
 	return conversations, nil
+}
+
+func (db *appdbimpl) UpdateConversationName(id int64, new_name string) (Conversation, error) {
+	var conversation Conversation
+
+	res, err := db.c.Exec(`UPDATE conversations SET name = $1 WHERE id = $2`, new_name, id)
+	if err != nil {
+		return conversation, fmt.Errorf("database error updating conversation name: %w", err)
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return conversation, fmt.Errorf("database error getting rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return conversation, fmt.Errorf("no conversation with id %d found", id)
+	}
+
+	conversation, err = db.GetConversation(id)
+	if err != nil {
+		return conversation, fmt.Errorf("database error getting conversation: %w", err)
+	}
+
+	return conversation, nil
+}
+
+func (db *appdbimpl) UpdateConversationPhoto(id int64, new_photo []byte) (Conversation, error) {
+	var conversation Conversation
+
+	res, err := db.c.Exec(`UPDATE conversations SET photo = $1 WHERE id = $2`, new_photo, id)
+	if err != nil {
+		return conversation, fmt.Errorf("database error updating conversation photo: %w", err)
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return conversation, fmt.Errorf("database error getting rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return conversation, fmt.Errorf("no conversation with id %d found", id)
+	}
+
+	conversation, err = db.GetConversation(id)
+	if err != nil {
+		return conversation, fmt.Errorf("database error getting conversation: %w", err)
+	}
+
+	return conversation, nil
 }

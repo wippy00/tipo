@@ -20,6 +20,9 @@ func (rt *_router) Handler() http.Handler {
 
 	// Conversation routes
 	rt.router.GET("/conversations/:id", rt.getConversation)
+	rt.router.PUT("/conversations/:id/setGroupName", rt.updateConversationName)
+	rt.router.PUT("/conversations/:id/setGroupPhoto", rt.updateConversationPhoto)
+
 	rt.router.GET("/conversations", rt.getConversationOfUser)
 
 	// Special routes
