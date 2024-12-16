@@ -28,6 +28,8 @@ func (db *appdbimpl) GetConversation(id int64) (Conversation, error) {
 		users participants ON conversations_members_2.id_user = participants.id
 	WHERE 
 		conversations.id = $1
+	GROUP BY
+        participants.id
 	ORDER BY
 		participants.id; 
 	`, id)
@@ -85,7 +87,11 @@ func (db *appdbimpl) GetConversation(id int64) (Conversation, error) {
 		conversations = append(conversations, *conv)
 	}
 
-	return Conversation{}, nil
+	if len(conversations) > 0 {
+		return conversations[0], nil
+	} else {
+		return Conversation{}, fmt.Errorf("no conversation found with id %d", id)
+	}
 }
 
 func (db *appdbimpl) GetConversationsOfUser(id int64) ([]Conversation, error) {
@@ -213,6 +219,31 @@ func (db *appdbimpl) UpdateConversationPhoto(id int64, new_photo []byte) (Conver
 	}
 
 	conversation, err = db.GetConversation(id)
+	if err != nil {
+		return conversation, fmt.Errorf("database error getting conversation: %w", err)
+	}
+
+	return conversation, nil
+}
+
+func (db *appdbimpl) AddUserToConversation(id_conversation int64, id_user int64) (Conversation, error) {
+	var rowsCount int64
+	// Check if user is already in conversation
+	err := db.c.QueryRow(`SELECT count(*) AS rowsCount FROM conversations_members WHERE id_conversations = $1 AND id_user = $2`, id_conversation, id_user).Scan(&rowsCount)
+	if err != nil {
+		return Conversation{}, fmt.Errorf("database error checking if user is already in conversation: %w", err)
+	}
+	if rowsCount > 0 {
+		return Conversation{}, fmt.Errorf("user is already in conversation")
+	}
+
+	// Add user to conversation
+	_, erro := db.c.Exec(`INSERT INTO conversations_members (id_conversations, id_user) VALUES ($1, $2)`, id_conversation, id_user)
+	if erro != nil {
+		return Conversation{}, fmt.Errorf("database error adding user to conversation: %w", err)
+	}
+
+	conversation, err := db.GetConversation(id_conversation)
 	if err != nil {
 		return conversation, fmt.Errorf("database error getting conversation: %w", err)
 	}

@@ -23,6 +23,7 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.PUT("/conversations/:id/setGroupName", rt.updateConversationName)
 	rt.router.PUT("/conversations/:id/setGroupPhoto", rt.updateConversationPhoto)
 
+	rt.router.POST("/conversations/:conversation_id/addToGroup/:user_id", rt.addUserToConversation)
 	rt.router.GET("/conversations", rt.getConversationOfUser)
 
 	// Special routes

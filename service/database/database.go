@@ -55,6 +55,7 @@ type AppDatabase interface {
 	GetConversationsOfUser(id int64) ([]Conversation, error)
 	UpdateConversationName(id int64, new_name string) (Conversation, error)
 	UpdateConversationPhoto(id int64, new_photo []byte) (Conversation, error)
+	AddUserToConversation(id_conversation int64, id_user int64) (Conversation, error)
 
 	Ping() error
 }

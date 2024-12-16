@@ -161,3 +161,48 @@ func (rt *_router) updateConversationPhoto(w http.ResponseWriter, r *http.Reques
 	_, _ = w.Write(userJSON)
 
 }
+
+func (rt *_router) addUserToConversation(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	_, hasAut, err := checkAuth(r, rt)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	if !hasAut {
+		http.Error(w, "not authorized to add user to conversation", http.StatusUnauthorized)
+		return
+	}
+
+	var string_conversation_id string = ps.ByName("conversation_id")
+	conversation_id, err := strconv.ParseInt(string_conversation_id, 10, 64)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var string_user_id string = ps.ByName("user_id")
+	user_id, err := strconv.ParseInt(string_user_id, 10, 64)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	dbConversation, err := rt.db.AddUserToConversation(conversation_id, user_id)
+	if err != nil && err.Error() == "user is already in conversation" {
+		http.Error(w, err.Error(), http.StatusConflict)
+		return
+	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("content-type", "application/json")
+	userJSON, err := json.Marshal(NewConversation(dbConversation))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	_, _ = w.Write(userJSON)
+}
