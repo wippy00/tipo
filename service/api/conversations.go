@@ -72,7 +72,7 @@ func (rt *_router) getConversationOfUser(w http.ResponseWriter, r *http.Request,
 func (rt *_router) updateConversationName(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var respConversation Conversation
 
-	_, hasAut, err := checkAuth(r, rt)
+	auth_id, hasAut, err := checkAuth(r, rt)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
@@ -95,7 +95,15 @@ func (rt *_router) updateConversationName(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	dbConversation, err := rt.db.UpdateConversationName(id, respConversation.Name)
+	dbConversation, err := rt.db.UpdateConversationName(id, auth_id, respConversation.Name)
+	if err != nil && err.Error() == "auth user is not in this group" {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+	if err != nil && err.Error() == "conversation is not a group" {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -114,7 +122,7 @@ func (rt *_router) updateConversationName(w http.ResponseWriter, r *http.Request
 func (rt *_router) updateConversationPhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	var respConversation User
 
-	_, hasAut, err := checkAuth(r, rt)
+	auth_id, hasAut, err := checkAuth(r, rt)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
@@ -146,7 +154,15 @@ func (rt *_router) updateConversationPhoto(w http.ResponseWriter, r *http.Reques
 	respConversation.Id = id
 	respConversation.Photo = photo
 
-	dbConversation, err := rt.db.UpdateConversationPhoto(respConversation.Id, respConversation.Photo)
+	dbConversation, err := rt.db.UpdateConversationPhoto(respConversation.Id, auth_id, respConversation.Photo)
+	if err != nil && err.Error() == "auth user is not in this group" {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+	if err != nil && err.Error() == "conversation is not a group" {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -163,7 +179,7 @@ func (rt *_router) updateConversationPhoto(w http.ResponseWriter, r *http.Reques
 }
 
 func (rt *_router) addUserToConversation(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	_, hasAut, err := checkAuth(r, rt)
+	auth_id, hasAut, err := checkAuth(r, rt)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
@@ -188,7 +204,15 @@ func (rt *_router) addUserToConversation(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	dbConversation, err := rt.db.AddUserToConversation(conversation_id, user_id)
+	dbConversation, err := rt.db.AddUserToConversation(conversation_id, auth_id, user_id)
+	if err != nil && err.Error() == "auth user is not in this group" {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+	if err != nil && err.Error() == "conversation is not a group" {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 	if err != nil && err.Error() == "user is already in conversation" {
 		http.Error(w, err.Error(), http.StatusConflict)
 		return
