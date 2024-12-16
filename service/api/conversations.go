@@ -230,3 +230,43 @@ func (rt *_router) addUserToConversation(w http.ResponseWriter, r *http.Request,
 	}
 	_, _ = w.Write(userJSON)
 }
+
+func (rt *_router) removeUserFromConversation(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	auth_id, hasAut, err := checkAuth(r, rt)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	if !hasAut {
+		http.Error(w, "not authorized to remove user from this conversation", http.StatusUnauthorized)
+		return
+	}
+
+	var string_conversation_id string = ps.ByName("conversation_id")
+	conversation_id, err := strconv.ParseInt(string_conversation_id, 10, 64)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = rt.db.RemoveUserFromConversation(conversation_id, auth_id, auth_id)
+	if err != nil && err.Error() == "auth user is not in this conversations" {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+	if err != nil && err.Error() == "conversation is not a group" {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err != nil && err.Error() == "user is already in conversation" {
+		http.Error(w, err.Error(), http.StatusConflict)
+		return
+	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}

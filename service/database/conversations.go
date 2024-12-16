@@ -19,7 +19,7 @@ func (db *appdbimpl) IsGroup(id_conversation int64) (bool, error) {
 	}
 }
 
-func (db *appdbimpl) IsUserInGroup(id_conversation int64, id_user int64) (bool, error) {
+func (db *appdbimpl) IsUserInConversation(id_conversation int64, id_user int64) (bool, error) {
 	var rowsCount int64
 
 	err := db.c.QueryRow(`SELECT count(*) AS rowsCount FROM conversations_members WHERE id_conversations = $1 AND id_user = $2`, id_conversation, id_user).Scan(&rowsCount)
@@ -222,12 +222,12 @@ func (db *appdbimpl) UpdateConversationName(id_conversation int64, id_auth int64
 		return Conversation{}, fmt.Errorf("conversation is not a group")
 	}
 
-	//Check if user is in group
-	isUserInGroup, err := db.IsUserInGroup(id_conversation, id_auth)
+	// Check if auth user is in the conversation
+	isUserInConversation, err := db.IsUserInConversation(id_conversation, id_auth)
 	if err != nil {
 		return Conversation{}, fmt.Errorf("database error checking if user is in group: %w", err)
 	}
-	if !isUserInGroup {
+	if !isUserInConversation {
 		return Conversation{}, fmt.Errorf("auth user is not in this group")
 	}
 
@@ -265,12 +265,12 @@ func (db *appdbimpl) UpdateConversationPhoto(id_conversation int64, id_auth int6
 		return Conversation{}, fmt.Errorf("conversation is not a group")
 	}
 
-	//Check if user is in group
-	isUserInGroup, err := db.IsUserInGroup(id_conversation, id_auth)
+	// Check if auth user is in the conversation
+	isUserInConversation, err := db.IsUserInConversation(id_conversation, id_auth)
 	if err != nil {
 		return Conversation{}, fmt.Errorf("database error checking if user is in group: %w", err)
 	}
-	if !isUserInGroup {
+	if !isUserInConversation {
 		return Conversation{}, fmt.Errorf("auth user is not in this group")
 	}
 
@@ -306,12 +306,12 @@ func (db *appdbimpl) AddUserToConversation(id_conversation int64, id_auth int64,
 		return Conversation{}, fmt.Errorf("conversation is not a group")
 	}
 
-	//Check if user is in group
-	isUserInGroup, err := db.IsUserInGroup(id_conversation, id_auth)
+	//Check if auth user is in the conversation
+	isUserInConversation, err := db.IsUserInConversation(id_conversation, id_auth)
 	if err != nil {
 		return Conversation{}, fmt.Errorf("database error checking if user is in group: %w", err)
 	}
-	if !isUserInGroup {
+	if !isUserInConversation {
 		return Conversation{}, fmt.Errorf("auth user is not in this group")
 	}
 
@@ -337,4 +337,60 @@ func (db *appdbimpl) AddUserToConversation(id_conversation int64, id_auth int64,
 	}
 
 	return conversation, nil
+}
+
+func (db *appdbimpl) RemoveUserFromConversation(id_conversation int64, id_auth int64, id_user int64) error {
+
+	//Check if auth user is in the conversation
+	isUserInConversation, err := db.IsUserInConversation(id_conversation, id_auth)
+	if err != nil {
+		return fmt.Errorf("database error checking if user is in conversation: %w", err)
+	}
+	if !isUserInConversation {
+		return fmt.Errorf("auth user is not in this conversation")
+	}
+
+	// Remove user from conversation
+	_, erro := db.c.Exec(`DELETE FROM conversations_members WHERE id_conversations = $1 AND id_user = $2`, id_conversation, id_user)
+	if erro != nil {
+		return fmt.Errorf("database error removing user from conversation: %w", err)
+	}
+
+	//	Check if is a group
+	isGroup, err := db.IsGroup(id_conversation)
+	if err != nil {
+		return fmt.Errorf("database error checking if is group: %w", err)
+	}
+
+	// Check if is the last user in the conversation
+	var userInConversation int64
+
+	erri := db.c.QueryRow(`SELECT count(*) AS userInConversation FROM conversations_members WHERE id_conversations = $1`, id_conversation).Scan(&userInConversation)
+	if erri != nil {
+		return fmt.Errorf("database error checking if user is in group: %w", err)
+	}
+
+	// println("userInConversation: ", userInConversation)
+	// println("isGroup: ", isGroup)
+
+	// if is a chat and it's the last user remove the chat
+	if !isGroup && userInConversation == 1 {
+		_, erro := db.c.Exec(`DELETE FROM conversations_members WHERE id_conversations = $1`, id_conversation)
+		if erro != nil {
+			return fmt.Errorf("database error removing conversation: %w", err)
+		}
+		_, erro = db.c.Exec(`DELETE FROM conversations WHERE id = $1`, id_conversation)
+		if erro != nil {
+			return fmt.Errorf("database error removing conversation: %w", err)
+		}
+	}
+	// if is a group and there are no users left remove the group
+	if isGroup && userInConversation == 0 {
+		_, erro := db.c.Exec(`DELETE FROM conversations WHERE id = $1`, id_conversation)
+		if erro != nil {
+			return fmt.Errorf("database error removing conversation: %w", err)
+		}
+	}
+
+	return nil
 }
