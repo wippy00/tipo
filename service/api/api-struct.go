@@ -1,6 +1,8 @@
 package api
 
 import (
+	"time"
+
 	"github.com/wippy00/wasa-text/service/database"
 )
 
@@ -42,5 +44,40 @@ func NewConversation(conversation database.Conversation) Conversation {
 		Photo:        conversation.Photo,
 		CnvType:      conversation.CnvType,
 		Participants: convertParticipants(conversation.Participants),
+	}
+}
+
+type Message struct {
+	Id               int64     `json:"id"`
+	Content          string    `json:"content"`
+	Photo            []byte    `json:"photo"`
+	Author           int64     `json:"author"`
+	Recipient        int64     `json:"recipient"`
+	Forwarded_source int64     `json:"forwarded_source"`
+	Timestamp        time.Time `json:"timestamp"`
+	// reaction  Reaction
+}
+
+func NewMessage(message database.Message) Message {
+	return Message{
+		Id:               message.Id,
+		Content:          message.Content,
+		Photo:            message.Photo,
+		Author:           message.Author,
+		Recipient:        message.Recipient,
+		Forwarded_source: message.Forwarded_source,
+		Timestamp:        message.Timestamp,
+	}
+}
+
+func DbMessage(message Message) database.Message {
+	return database.Message{
+		Id:               message.Id,
+		Content:          message.Content,
+		Photo:            message.Photo,
+		Author:           message.Author,
+		Recipient:        message.Recipient,
+		Forwarded_source: message.Forwarded_source,
+		Timestamp:        message.Timestamp,
 	}
 }

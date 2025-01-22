@@ -1,28 +1,12 @@
 package database
 
+import "time"
+
 type User struct {
 	Id    int64  `json:"id"`
 	Name  string `json:"name"`
 	Photo []byte `json:"photo"`
 }
-
-// type Message struct {
-// 	Id      int
-// 	content string
-// 	photo   []byte
-
-// 	author       User
-// 	recipient    Conversation
-// 	forwarded_to User
-
-// 	timestamp string
-// 	reaction  Reaction
-// }
-
-// type Reaction struct {
-// 	user     User
-// 	reaction string
-// }
 
 type Conversation struct {
 	Id           int64  `json:"id"`
@@ -32,3 +16,19 @@ type Conversation struct {
 	Participants []User `json:"participants"`
 	// messages     []Message `json:"messages"`
 }
+
+type Message struct {
+	Id               int64     `json:"id"`
+	Content          string    `json:"content"`
+	Photo            []byte    `json:"photo"`
+	Author           int64     `json:"author"`
+	Recipient        int64     `json:"recipient"`
+	Forwarded_source int64     `json:"forwarded_source"`
+	Timestamp        time.Time `json:"timestamp"`
+	// reaction  Reaction
+}
+
+// type Reaction struct {
+// 	user     User
+// 	reaction string
+// }

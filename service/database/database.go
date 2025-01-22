@@ -53,11 +53,17 @@ type AppDatabase interface {
 	// Conversation
 	GetConversation(id int64) (Conversation, error)
 	GetConversationsOfUser(id int64) ([]Conversation, error)
+
+	// GetConversationMessages(id int64)
 	UpdateConversationName(id int64, id_auth int64, new_name string) (Conversation, error)
 	UpdateConversationPhoto(id int64, id_auth int64, new_photo []byte) (Conversation, error)
 	AddUserToConversation(id_conversation int64, id_auth int64, id_user int64) (Conversation, error)
 	RemoveUserFromConversation(id_conversation int64, id_auth int64, id_user int64) error
 
+	// Message
+	SendMessage(id_conversation int64, id_auth int64, message Message) (Message, error)
+	DeleteMessage(id_message int64, id_auth int64) error
+	ForwardMessage(id_message int64, id_auth int64, id_conversation int64) (Message, error)
 	Ping() error
 }
 
@@ -95,7 +101,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 			id INTEGER NOT NULL PRIMARY KEY, 
 			name VARCHAR(50) NOT NULL,
 			photo BLOB,
-			cnv_type TEXT NOT NULL
+			cnv_type VARCHAR(10) NOT NULL
 		);`
 		_, err = db.Exec(conversations_table)
 		if err != nil {
@@ -124,12 +130,12 @@ func New(db *sql.DB) (AppDatabase, error) {
 			photo BLOB,
 			author INT NOT NULL,
 			recipient INT NOT NULL,
-			forwarded_to INT,
-			timestamp TEXT DEFAULT CURRENT_TIMESTAMP,
+			forwarded_source INT,
+			timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			
 			FOREIGN KEY (author) REFERENCES users(id),
 			FOREIGN KEY (recipient) REFERENCES conversations(id),
-			FOREIGN KEY (forwarded_to) REFERENCES conversations(id)
+			FOREIGN KEY (forwarded_source) REFERENCES messages(id)
 		);`
 		_, err = db.Exec(messages_table)
 		if err != nil {
@@ -139,7 +145,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 		// ###					messages_readers					###
 		// ############################################################
 		messages_readers_table := `CREATE TABLE IF NOT EXISTS messages_readers (
-			id_user INTEGER NOT NULL PRIMARY KEY,
+			id_user INTEGER NOT NULL,
 			id_message INTEGER NOT NULL,
 			
 			FOREIGN KEY (id_user) REFERENCES users(id),
@@ -153,7 +159,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 		// ###						reactions						###
 		// ############################################################
 		reactions_table := `CREATE TABLE IF NOT EXISTS reactions (
-			id_user INTEGER NOT NULL PRIMARY KEY,
+			id_user INTEGER NOT NULL,
 			id_message INTEGER NOT NULL,
 			reaction VARCHAR(3) NOT NULL,
 			
