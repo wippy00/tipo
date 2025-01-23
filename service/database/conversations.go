@@ -80,7 +80,7 @@ func (db *appdbimpl) GetConversation(id int64) (Conversation, error) {
 			&conversation.Id,
 			&conversation.Name,
 			&conversation.Photo,
-			&conversation.CnvType,
+			&conversation.Cnv_type,
 			&participant.Id,
 			&participant.Name,
 			&participant.Photo,
@@ -91,10 +91,10 @@ func (db *appdbimpl) GetConversation(id int64) (Conversation, error) {
 		// Verifica e crea la conversazione se non esiste
 		if conversation_map[conversation.Id] == nil {
 			conversation_map[conversation.Id] = &Conversation{
-				Id:      conversation.Id,
-				Name:    conversation.Name,
-				Photo:   conversation.Photo,
-				CnvType: conversation.CnvType,
+				Id:       conversation.Id,
+				Name:     conversation.Name,
+				Photo:    conversation.Photo,
+				Cnv_type: conversation.Cnv_type,
 			}
 			lastParticipantID = -1
 		}
@@ -119,64 +119,21 @@ func (db *appdbimpl) GetConversation(id int64) (Conversation, error) {
 		conversations = append(conversations, *conv)
 	}
 
+	for i := range conversations {
+		message, err := db.GetLastMessage(conversations[i].Id)
+		if err != nil {
+			return Conversation{}, fmt.Errorf("error getting last message: %w of conversation %d", err, conversations[i].Id)
+		}
+
+		conversations[i].Last_message = message
+	}
+
 	if len(conversations) > 0 {
 		return conversations[0], nil
 	} else {
 		return Conversation{}, fmt.Errorf("no conversation found")
 	}
 }
-
-// func (db *appdbimpl) GetConversationMessages(id int64) ([]Message, error) {
-// 	var messages []Message
-
-// 	rows, err := db.c.Query(`
-// 	SELECT
-// 		messages.id as message_id,
-// 		messages.text as message_text,
-// 		messages.time as message_time,
-// 		messages.author as message_author,
-// 		users.id as user_id,
-// 		users.name as user_name,
-// 		users.photo as user_photo
-// 	FROM
-// 		messages
-// 	JOIN
-// 		users ON messages.author = users.id
-// 	WHERE
-// 		messages.conversation = $1
-// 	ORDER BY
-// 		messages.time;
-// 	`, id)
-// 	if err != nil {
-// 		return messages, fmt.Errorf("error getting messages: %w", err)
-// 	}
-// 	defer rows.Close()
-
-// 	for rows.Next() {
-// 		var message Message
-// 		var user User
-
-// 		if err := rows.Scan(
-// 			&message.Id,
-// 			&message.Text,
-// 			&message.Time,
-// 			&message.Author,
-// 			&user.Id,
-// 			&user.Name,
-// 			&user.Photo,
-// 		); err != nil {
-// 			return messages, fmt.Errorf("error getting message row: %w", err)
-// 		}
-
-// 		message.AuthorName = user.Name
-// 		message.AuthorPhoto = user.Photo
-
-// 		// messages = append(messages, message)
-
-// 	}
-
-// 	return messages, nil
-// }
 
 func (db *appdbimpl) GetConversationsOfUser(id int64) ([]Conversation, error) {
 	var conversations []Conversation
@@ -220,7 +177,7 @@ func (db *appdbimpl) GetConversationsOfUser(id int64) ([]Conversation, error) {
 			&conversation.Id,
 			&conversation.Name,
 			&conversation.Photo,
-			&conversation.CnvType,
+			&conversation.Cnv_type,
 			&participant.Id,
 			&participant.Name,
 			&participant.Photo,
@@ -231,10 +188,10 @@ func (db *appdbimpl) GetConversationsOfUser(id int64) ([]Conversation, error) {
 		// Verifica e crea la conversazione se non esiste
 		if conversation_map[conversation.Id] == nil {
 			conversation_map[conversation.Id] = &Conversation{
-				Id:      conversation.Id,
-				Name:    conversation.Name,
-				Photo:   conversation.Photo,
-				CnvType: conversation.CnvType,
+				Id:       conversation.Id,
+				Name:     conversation.Name,
+				Photo:    conversation.Photo,
+				Cnv_type: conversation.Cnv_type,
 			}
 			lastParticipantID = -1
 		}
@@ -257,6 +214,15 @@ func (db *appdbimpl) GetConversationsOfUser(id int64) ([]Conversation, error) {
 	conversations = make([]Conversation, 0, len(conversation_map))
 	for _, conv := range conversation_map {
 		conversations = append(conversations, *conv)
+	}
+
+	for i := range conversations {
+		message, err := db.GetLastMessage(conversations[i].Id)
+		if err != nil {
+			return []Conversation{}, fmt.Errorf("error getting last message: %w of conversation %d", err, conversations[i].Id)
+		}
+
+		conversations[i].Last_message = message
 	}
 
 	return conversations, nil

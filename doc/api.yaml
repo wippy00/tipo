@@ -6,6 +6,17 @@ info:
     The project is a chat application that allows users to chat with each other.
     The API allows users to log in, create groups, send messages, and more.
   version: 1.0.0
+
+tags:
+    - name: login
+      description: Operations related to user login
+    - name: user
+      description: Operations related to user management
+    - name: conversation
+      description: Operations related to conversations and groups
+    - name: message
+      description: Operations related to sending and managing messages
+
 paths:
   /session:
     post:
@@ -28,7 +39,7 @@ paths:
                   example: Mario
                   pattern: "^.*?$"
                   minLength: 3
-                  maxLength: 16
+                  maxLength: 30
       responses:
         "201":
           description: User log-in action successful
@@ -38,8 +49,8 @@ paths:
                 type: object
                 properties:
                   identifier:
-                    type: string
-                    example: "abcdef012345"
+                    type: integer
+                    example: 1
 
   /setUsername:
     put:
@@ -63,7 +74,7 @@ paths:
                   example: Mario
                   pattern: "^.*?$"
                   minLength: 3
-                  maxLength: 16
+                  maxLength: 30
       responses:
         "204":
           $ref: '#/components/responses/204_NoContent'
@@ -101,17 +112,18 @@ paths:
       security:
         - bearerAuth: []
       summary: Get conversation of user
-      description: Get all chats and groups of the user by its identifier
+      description: Get all conversations and groups of the user by its identifier
       operationId: getMyConversations
       responses:
         "200":
-          description: List of chats and groups
+          description: List of conversations and groups
           content:
             application/json:
               schema:
                 type: array
+                minItems: 1
                 items:
-                  $ref: "#/components/schemas/chat"
+                  $ref: "#/components/schemas/conversation"
         "401":
           $ref: '#/components/responses/401_Unauthorized'
 
@@ -137,7 +149,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/chat"
+                $ref: "#/components/schemas/conversation"
         "401":
           $ref: '#/components/responses/401_Unauthorized'
         "404":
@@ -279,6 +291,34 @@ paths:
           $ref: '#/components/responses/404_NotFound'
 
   /conversations/{conversation_id}/messages:
+    get:
+      tags: ["message"]
+      security:
+        - bearerAuth: []
+      summary: Get all messages of conversation
+      description: Get all messages of conversation by its id
+      operationId: getMessages
+      parameters:
+        - name: conversation_id
+          in: path
+          required: true
+          description: Conversation identifier
+          schema:
+            type: integer
+            example: 1
+            description: The id of the conversation to get the messages
+      responses:
+        "200":
+          description: Return all messages of the conversation
+          content:
+            application/json:
+              schema:
+                type: array
+                minItems: 1
+                items:
+                  $ref: "#/components/schemas/message"
+        "404":
+          $ref: '#/components/responses/404_NotFound'
     post:
       tags: ["message"]
       security:
@@ -464,39 +504,48 @@ paths:
         "404":
           $ref:  '#/components/responses/404_NotFound'
     
-
-
-
-
-
-
-
-
-
-
-
-
+  /getUser/{user_id]:
+    get:
+      tags: ["user"]
+      security:
+        - bearerAuth: []
+      summary: Get user info
+      description: Get user info from its id
+      operationId: getUser
+      responses:
+        "200":
+          description: Return user info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/user"
+        "401":
+          $ref: '#/components/responses/401_Unauthorized'
+        "404":
+          $ref: '#/components/responses/404_NotFound'
 
 
 components:
   schemas:
     user:
+      description: Schema representing a user object
       type: object
       properties:
-        username:
+        id:
+          type: integer
+          example: 1
+        name:
           type: string
           example: Mario
           pattern: "^.*?$"
           minLength: 3
-          maxLength: 16
-        id:
-          type: string
-          example: abcdef012345
+          maxLength: 30
         photo:
           type: string
           format: binary
 
-    chat:
+    conversation:
+      description: Schema representing a conversation object
       type: object
       properties:
         id:
@@ -505,54 +554,76 @@ components:
         name:
           type: string
           example: I salamini
+          minLength: 3
+          maxLength: 50
         photo:
           type: string
           format: binary
-        type:
+        cnv_type:
           type: string
           enum: [chat, group]
           example: group
+          minLength: 3
+          maxLength: 5
         participants:
           type: array
+          minItems: 1
           items:
             $ref: "#/components/schemas/user"
-        messages:
-          type: array
-          items:
-            $ref: "#/components/schemas/message"
-
+        last_message:
+          $ref: "#/components/schemas/message"
+            
     message:
       type: object
+      description: Schema representing a message object
       properties:
         text:
           type: string
           example: "Ciao"
+          description: Message text
+          minLength: 0
+          maxLength: 200
         photo:
           type: string
           format: binary
-        from:
+          description: Photo of the group/chat
+        author:
           type: integer
           example: 1
-          description: User Id
-        forwarded:
+          description: User Id of the message sender
+        recipient:
           type: integer
           example: 1
-          description: If forwarded, the chat id
+          description: Conversation Id of the recipient conversation
+        forwarded_source:
+          type: integer
+          example: 1
+          description: If forwarded, the message id who has been forwarded 
         timestamp:
           type: string
           format: date-time
           example: "2024-12-26T14:16:10Z"
+          description: date time of the message creation
         reactions:
           type: array
+          minItems: 1
+          description: Schema representing a reaction object
           items:
             type: object
             properties:
               user:
                 type: integer
                 example: 1
+                description: Id of the user who reacted
               reaction:
                 type: string
+                pattern: ^[\u1F600-\u1F64F\u1F300-\u1F5FF\u1F680-\u1F6FF\u2600-\u26FF\u2700-\u27BF]+$
                 example: "🗿"
+                description: Reaction emoji
+                minLength: 1
+                maxLength: 1
+                
+  
 
   responses:
 

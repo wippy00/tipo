@@ -21,12 +21,12 @@ func NewUser(user database.User) User {
 }
 
 type Conversation struct {
-	Id           int64  `json:"id"`
-	Name         string `json:"name"`
-	Photo        []byte `json:"photo"`
-	CnvType      string `json:"cnvType"`
-	Participants []User `json:"participants"`
-	// messages     []Message `json:"messages"`
+	Id           int64   `json:"id"`
+	Name         string  `json:"name"`
+	Photo        []byte  `json:"photo"`
+	Cnv_type     string  `json:"cnv_type"`
+	Participants []User  `json:"participants"`
+	Last_message Message `json:"last_message"`
 }
 
 func convertParticipants(dbParticipants []database.User) []User {
@@ -42,8 +42,9 @@ func NewConversation(conversation database.Conversation) Conversation {
 		Id:           conversation.Id,
 		Name:         conversation.Name,
 		Photo:        conversation.Photo,
-		CnvType:      conversation.CnvType,
+		Cnv_type:     conversation.Cnv_type,
 		Participants: convertParticipants(conversation.Participants),
+		Last_message: NewMessage(conversation.Last_message),
 	}
 }
 

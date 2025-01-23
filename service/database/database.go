@@ -48,7 +48,6 @@ type AppDatabase interface {
 	UserExistById(id int64) (User, bool, error)
 	GetUsers() ([]User, error)
 	GetUser(id int64) (User, error)
-	// AddUser(user User) error
 
 	// Conversation
 	GetConversation(id int64) (Conversation, error)
@@ -61,9 +60,12 @@ type AppDatabase interface {
 	RemoveUserFromConversation(id_conversation int64, id_auth int64, id_user int64) error
 
 	// Message
+	GetMessagesOfConversation(id_conversation int64, id_auth int64) ([]Message, error)
+
 	SendMessage(id_conversation int64, id_auth int64, message Message) (Message, error)
 	DeleteMessage(id_message int64, id_auth int64) error
 	ForwardMessage(id_message int64, id_auth int64, id_conversation int64) (Message, error)
+
 	Ping() error
 }
 
