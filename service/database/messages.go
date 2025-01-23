@@ -12,7 +12,7 @@ func (db *appdbimpl) GetMessage(id_message int64) (Message, error) {
 	// error getting message: database error getting message: sql: Scan error on column index 5, name "forwarded_source": converting NULL to int64 is unsupported
 
 	err := db.c.QueryRow(`SELECT id, text, photo, author, recipient, COALESCE(forwarded_source, 0) AS forwarded_source, timestamp FROM messages WHERE id = $1;`, id_message).Scan(
-		&message.Id, &message.Content, &message.Photo, &message.Author, &message.Recipient, &message.Forwarded_source, &message.Timestamp)
+		&message.Id, &message.Text, &message.Photo, &message.Author, &message.Recipient, &message.Forwarded_source, &message.Timestamp)
 	if err == sql.ErrNoRows {
 		return Message{}, fmt.Errorf("message not found")
 	}
@@ -44,7 +44,7 @@ func (db *appdbimpl) GetLastMessage(id_conversation int64) (Message, error) {
 		LIMIT 1
 		`, id_conversation).Scan(
 		&message.Id,
-		&message.Content,
+		&message.Text,
 		&message.Photo,
 		&message.Author,
 		&message.Recipient,
@@ -108,7 +108,7 @@ func (db *appdbimpl) GetMessagesOfConversation(id_conversation int64, id_auth in
 		var message Message
 		err := rows.Scan(
 			&message.Id,
-			&message.Content,
+			&message.Text,
 			&message.Photo,
 			&message.Author,
 			&message.Recipient,
@@ -153,7 +153,7 @@ func (db *appdbimpl) SendMessage(id_conversation int64, id_auth int64, message M
 	photo, 
 	author, 
 	recipient
-	) VALUES ($1, $2, $3, $4);`, message.Content, message.Photo, message.Author, message.Recipient)
+	) VALUES ($1, $2, $3, $4);`, message.Text, message.Photo, message.Author, message.Recipient)
 	if err != nil {
 		return Message{}, fmt.Errorf("database error inserting message: %w", err)
 	}
@@ -229,7 +229,7 @@ func (db *appdbimpl) ForwardMessage(id_message int64, id_auth int64, id_conversa
 	author, 
 	recipient,
 	forwarded_source
-	) VALUES ($1, $2, $3, $4, $5);`, message.Content, message.Photo, message.Author, message.Recipient, message.Forwarded_source)
+	) VALUES ($1, $2, $3, $4, $5);`, message.Text, message.Photo, message.Author, message.Recipient, message.Forwarded_source)
 	if err != nil {
 		return Message{}, fmt.Errorf("database error inserting message: %w", err)
 	}

@@ -19,7 +19,7 @@ type Conversation struct {
 
 type Message struct {
 	Id               int64     `json:"id"`
-	Content          string    `json:"content"`
+	Text             string    `json:"text"`
 	Photo            []byte    `json:"photo"`
 	Author           int64     `json:"author"`
 	Recipient        int64     `json:"recipient"`

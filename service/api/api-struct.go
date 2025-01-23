@@ -50,7 +50,7 @@ func NewConversation(conversation database.Conversation) Conversation {
 
 type Message struct {
 	Id               int64     `json:"id"`
-	Content          string    `json:"content"`
+	Text             string    `json:"text"`
 	Photo            []byte    `json:"photo"`
 	Author           int64     `json:"author"`
 	Recipient        int64     `json:"recipient"`
@@ -62,7 +62,7 @@ type Message struct {
 func NewMessage(message database.Message) Message {
 	return Message{
 		Id:               message.Id,
-		Content:          message.Content,
+		Text:             message.Text,
 		Photo:            message.Photo,
 		Author:           message.Author,
 		Recipient:        message.Recipient,
@@ -74,7 +74,7 @@ func NewMessage(message database.Message) Message {
 func DbMessage(message Message) database.Message {
 	return database.Message{
 		Id:               message.Id,
-		Content:          message.Content,
+		Text:             message.Text,
 		Photo:            message.Photo,
 		Author:           message.Author,
 		Recipient:        message.Recipient,
