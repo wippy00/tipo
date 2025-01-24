@@ -52,7 +52,7 @@ paths:
                     type: integer
                     example: 1
 
-  /setUsername:
+  /setUserName:
     put:
       tags: ["user"]
       security:
@@ -81,7 +81,7 @@ paths:
         "401":
           $ref: '#/components/responses/401_Unauthorized'
 
-  /setMyPhoto:
+  /setUserPhoto:
     put:
       tags: ["user"]
       security:

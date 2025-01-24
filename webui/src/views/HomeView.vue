@@ -2,44 +2,39 @@
 export default {
 	data: function () {
 		return {
+			error: null,
 			errormsg: null,
 			loading: false,
-			some_data: null,
-			error: null,
-			username: "",
-			id: 0,
+
+			logged_in: false,
+			name: ""
 		}
 	},
 	methods: {
-		async refresh() {
-			this.loading = true;
-			this.errormsg = null;
-			try {
-				let response = await this.$axios.get("/");
-				this.some_data = response.data;
-			} catch (e) {
-				this.errormsg = e.toString();
-			}
-			this.loading = false;
-		},
 		async loginHandler(event) {
 			event.preventDefault()
 
-			if (this.username === "") {
-				this.error = "Username cannot be empty.";
+			if (this.name === "") {
+				this.error = "name cannot be empty.";
 				return;
 			}
 			this.error = null
+
 			try {
-				let response = await this.$axios.post("/login", { name: this.username })
-				console.log(response.data)
-				await sessionStorage.setItem("id", response.data.id);
-				await sessionStorage.setItem("username", response.data.name);
-				// await sessionStorage.setItem("photo", response.data.photo);
+				let response = await this.$axios.post("/login", { name: this.name })
+				
+				
+				sessionStorage.setItem("logged_in", true);
+				sessionStorage.setItem("id", response.data.id);
+				sessionStorage.setItem("name", response.data.name);
+				localStorage.setItem("photo", response.data.photo);
+				
+
 				this.$router.push({ path: '/conversations' })
+
 			} catch (event) {
 				if (event.response && event.response.status === 400) {
-					this.error = "Username should has a length between 3 - 16";
+					this.error = "name should has a length between 3 - 16";
 				} else if (event.response && event.response.status === 500) {
 					this.error = "An internal error occurred, please try again later.";
 				} else {
@@ -53,56 +48,47 @@ export default {
 		}
 	},
 	mounted() {
-		this.refresh()
+		if (sessionStorage.getItem('logged_in') === true) {
+            this.$router.push('/conversations')
+        }
+
+		this.logged_in = sessionStorage.getItem('logged_in');
+		console.log(this.logged_in)
 	}
 }
 </script>
 
 <template>
 	<div class="container">
-		<!-- <div
-			class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-			<h1 class="h2">Home page</h1>
-			<div class="btn-toolbar mb-2 mb-md-0">
-				<div class="btn-group me-2">
-					<button type="button" class="btn btn-sm btn-outline-secondary" @click="refresh">
-						Refresh
-					</button>
-					<button type="button" class="btn btn-sm btn-outline-secondary" @click="exportList">
-						Export
-					</button>
-				</div>
-				<div class="btn-group me-2">
-					<button type="button" class="btn btn-sm btn-outline-primary" @click="newItem">
-						New
-					</button>
-				</div>
-			</div>
-		</div> -->
 
 		<ErrorMsg v-if="error" :msg="errormsg"></ErrorMsg>
 
-
-		<div class="p-2">
-			<h1 class="text-center">Login</h1>
-			<form @submit.prevent="loginHandler">
-				<div class="mb-3">
-					<label for="username" class="form-label">Username</label>
-					<input type="text" class="form-control" id="username" v-model="username"
-						aria-describedby="usernameHelp">
-				</div>
-				<button type="submit" class="btn btn-primary">Submit</button>
-			</form>
+		<div v-if="logged_in">
+			<div class="p-2">
+				<h1 class="text-center">Login</h1>
+				<form @submit.prevent="loginHandler">
+					<div class="mb-3">
+						<label for="name" class="form-label">name</label>
+						<input type="text" class="form-control" id="name" v-model="name"
+							aria-describedby="nameHelp">
+					</div>
+					<button type="submit" class="btn btn-primary">Submit</button>
+				</form>
+			</div>
 		</div>
+		<div v-else>
+			<h1 class="text-center">Welcome {{ name }}</h1>
 
-		<!-- <h1 v-if="sessionStorage.getItem('username')">
-			{{ username }}
-		</h1> -->
+		</div>
+		
+
+		
+
+		
+
 	</div>
 </template>
 
 <style>
-.container {
-	height: 100vh;
-}
+
 </style>

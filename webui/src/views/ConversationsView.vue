@@ -33,8 +33,14 @@ export default {
                         authorization: auth_id
                     }
                 })
-                this.conversations = response.data
-                return conversations
+                conversations = response.data
+
+                for (let i = 0; i < conversations.length; i++) {
+                    let userData = await this.fethcUser(conversations[i].last_message.author)
+                    conversations[i].last_message.author = userData
+                }
+                this.conversations = conversations
+                // return conversations
             } catch (e) {
                 this.error = e.toString()
             }
@@ -58,14 +64,13 @@ export default {
         }
 	},
 	async mounted() {
-		this.refresh(),
+        if (sessionStorage.getItem('logged_in') === false || sessionStorage.getItem('logged_in') === null) {
+            console.log("Not logged in")
+            this.$router.push('/')
+        }
+
+		this.refresh();
         await this.fetchConversations();
-   
-        for (let i = 0; i < this.conversations.length; i++) {
-            let userData = await this.fethcUser(this.conversations[i].last_message.author)
-            this.conversations[i].last_message.author = userData
-        }  
-        
     }
 }
 </script>
@@ -87,8 +92,10 @@ export default {
 
                 <div class="col-md-11 col-10">
                     <div class="card-body">
-                        <h5 class="card-title">{{ item.name }}</h5>
-                        <p class="card-text"><small class="text-body-secondary">{{ item.last_message.author.name +": "+item.last_message.content }}</small></p>
+                        <RouterLink :to="'/conversations/' + item.id">
+                            <h5 class="card-title text-capitalize">{{ item.name }}</h5>
+						</RouterLink>
+                        <p class="card-text text-capitalize">{{ item.last_message.author.name +": " }}<small class="text-body-secondary">{{ item.last_message.content }}</small></p>
                     </div>
                 </div>
 

@@ -2,13 +2,40 @@
 import { RouterLink, RouterView } from 'vue-router'
 </script>
 <script>
-export default {}
+export default {
+	data: function () {
+		return {
+			error: null,
+			errormsg: null,
+			loading: false,
+		    
+			auth_id: null,
+			auth_name: null,
+			auth_photo: null
+        }
+        
+	},
+	methods: {
+		async logout() {
+			sessionStorage.removeItem('id');
+			sessionStorage.removeItem('name');
+			localStorage.removeItem('photo');
+			
+			sessionStorage.setItem("logged_in", false);
+			this.$router.push('/');
+		}
+	},
+	mounted() {
+		this.auth_id = sessionStorage.getItem('id');
+		this.auth_name = sessionStorage.getItem('name');
+		this.auth_photo = localStorage.getItem('photo');
+	}
+}
 </script>
 
 <template>
-
-	<header class="text-light">
-		<nav class="navbar navbar-expand-lg bg-body-tertiary">
+	<header>
+		<nav class="navbar navbar-expand-lg bg-dark fixed-top">
 			<div class="container-fluid">
 				<a class="navbar-brand">Wasa Text</a>
 				<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -17,76 +44,38 @@ export default {}
 				<div class="collapse navbar-collapse" id="navbarNav">
 					<ul class="navbar-nav">
 						<li class="nav-item">
-						<RouterLink to="/" class="nav-link text-light">
+						<RouterLink to="/" class="nav-link ">
 							Home
-						</RouterLink>						</li>
+						</RouterLink>
+						</li>
 						<li class="nav-item">
-						<!-- <RouterLink to="/profile" class="nav-link text-light">
+						<RouterLink to="/profile" class="nav-link ">
 							Profile
-						</RouterLink> -->
+						</RouterLink>
 						</li>
 					</ul>
 				</div>
-				<form class="d-flex" role="search">
+				<div v-if="auth_id" class="d-flex profilo">
+					<RouterLink to="/profile" class="nav-link text-light">
+						<img v-if="auth_photo == null" :src="'data:image/jpeg;base64,' + auth_photo" width="42" height="42" class="rounded-circle" style="object-fit: cover;">
+						<img v-else :src="'https://placehold.co/100x100/orange/white?text=' + auth_name" width="42" height="42" class="rounded-circle" style="object-fit: cover;">
+					</RouterLink>
+					<p class="text-capitalize ms-2 pt-2 d-block">Hi {{ auth_name }} </p>
+					<button type="button" class="btn btn-primary ms-2" @click="logout">Logout</button>
+				</div>
+				<!-- <form class="d-flex" role="search">
 					<input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
 					<button class="btn btn-outline-success" type="submit">Search</button>
-				</form>
+				</form> -->
 			</div>
+			<hr>
 		</nav>
 	</header>
-
+	
+	<div class="mt-5 p-3"></div>
+	
 	<main>
 		<RouterView />
 	</main>
 
-	<!-- <div class="container-fluid bg-dark text-light">
-		<div class="row">
-			<nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
-				<div class="position-sticky pt-3 sidebar-sticky">
-					<h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
-						<span>General</span>
-					</h6>
-					<ul class="nav flex-column">
-						<li class="nav-item">
-							<RouterLink to="/" class="nav-link text-light">
-								<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#home"/></svg>
-								Home
-							</RouterLink>
-						</li>
-						<li class="nav-item">
-							<RouterLink to="/link1" class="nav-link text-light">
-								<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#layout"/></svg>
-								Menu item 1
-							</RouterLink>
-						</li>
-						<li class="nav-item">
-							<RouterLink to="/link2" class="nav-link text-light">
-								<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#key"/></svg>
-								Menu item 2
-							</RouterLink>
-						</li>
-					</ul>
-
-					<h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
-						<span>Secondary menu</span>
-					</h6>
-					<ul class="nav flex-column">
-						<li class="nav-item">
-							<RouterLink :to="'/some/' + 'variable_here' + '/path'" class="nav-link text-light">
-								<svg class="feather"><use href="/feather-sprite-v4.29.0.svg#file-text"/></svg>
-								Item 1
-							</RouterLink>
-						</li>
-					</ul>
-				</div>
-			</nav>
-
-			<main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 bg-dark text-light">
-				<RouterView />
-			</main>
-		</div>
-	</div> -->
 </template>
-
-<style>
-</style>
