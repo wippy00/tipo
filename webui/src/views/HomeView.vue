@@ -23,12 +23,11 @@ export default {
 			try {
 				let response = await this.$axios.post("/login", { name: this.name })
 				
-				
 				sessionStorage.setItem("logged_in", true);
 				sessionStorage.setItem("id", response.data.id);
 				sessionStorage.setItem("name", response.data.name);
 				localStorage.setItem("photo", response.data.photo);
-				
+
 
 				this.$router.push({ path: '/conversations' })
 
@@ -48,7 +47,7 @@ export default {
 		}
 	},
 	mounted() {
-		if (sessionStorage.getItem('logged_in') === true) {
+		if (sessionStorage.getItem('logged_in') === "true") {
             this.$router.push('/conversations')
         }
 
@@ -63,7 +62,7 @@ export default {
 
 		<ErrorMsg v-if="error" :msg="errormsg"></ErrorMsg>
 
-		<div v-if="logged_in">
+		<div v-if="logged_in !== 'true'">
 			<div class="p-2">
 				<h1 class="text-center">Login</h1>
 				<form @submit.prevent="loginHandler">
@@ -78,7 +77,6 @@ export default {
 		</div>
 		<div v-else>
 			<h1 class="text-center">Welcome {{ name }}</h1>
-
 		</div>
 		
 

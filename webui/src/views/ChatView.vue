@@ -23,7 +23,7 @@ export default {
 			this.errormsg = null;
 			
             this.auth_id = sessionStorage.getItem('id');
-            await this.fetchConversations(this.$route.params.id);
+            // await this.fetchConversations(this.$route.params.id);
             await this.fetchMessages(this.$route.params.id);
 
             // this.$nextTick(() => {
@@ -61,12 +61,14 @@ export default {
 			let auth_id = sessionStorage.getItem('id')
 
             try {
-                let response = await this.$axios.get("/conversations/"+conversations_id, {
+                let response = await this.$axios.get("/conversations/" + conversations_id, {
                     headers: {
                         authorization: auth_id
                     }
                 })
                 this.conversations = response.data
+                console.log('Conversations:', this.conversations)
+                // console.log(this.conversations)
                 // return conversations
             } catch (e) {
                 this.error = e.toString()
@@ -78,7 +80,7 @@ export default {
 			let auth_id = sessionStorage.getItem('id')
 
             try {
-                let response = await this.$axios.get("/user/"+user_id, {
+                let response = await this.$axios.get("/users/"+user_id, {
                     headers: {
                         authorization: auth_id
                     }
@@ -98,12 +100,6 @@ export default {
 
             let auth_id = sessionStorage.getItem('id')
             console.log(this.message_input)
-            let message = {
-                text: this.message_input,
-                // photo: this.photo_input,
-                // author: this.auth_id,
-                // recipient: this.conversations.id
-            }
 
             try {
                 let response = await this.$axios.post("/conversations/"+this.$route.params.id+"/messages", {
@@ -130,6 +126,11 @@ export default {
         }
 	},
 	async mounted() {
+        if (sessionStorage.getItem('logged_in') !== "true") {
+            console.log("Not logged in")
+            this.$router.push('/')
+        }
+        
         this.auth_id = sessionStorage.getItem('id');
 
         await this.fetchMessages(this.$route.params.id)
@@ -149,7 +150,17 @@ export default {
 
 <template>
     <div class="container">
-        <!-- <h1> {{ conversations.name }}</h1> -->
+        <!-- <div class="card p-2 bg-body-tertiary col-12">
+            <div class="d-flex">
+                <img v-if="conversations.photo" :src="'data:image/jpeg;base64,' + conversations.photo" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
+                <img v-else :src="'https://placehold.co/100x100/orange/white?text=' + conversations.name" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
+                <h1 class="ms-2 text-capitalize"> {{ conversations.name }}</h1>
+            </div>
+            <ul class="list-inline mt-2 ms-2">
+                <li class="list-inline-item text-capitalize" v-for="user in conversations.participants">{{ user.name  + " -" }}</li>
+                <li class="list-inline-item">...</li>
+            </ul>
+        </div> -->
         <div v-for="message in messages">
             <!-- Se sono io -->
             <div v-if="message.author.id == auth_id" class="card my-4 bg-body-tertiary offset-md-7 col-5">

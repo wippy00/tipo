@@ -10,17 +10,6 @@ export default {
 }
 	},
 	methods: {
-		async refresh() {
-			this.loading = true;
-			this.errormsg = null;
-			try {
-				let response = await this.$axios.get("/");
-				this.some_data = response.data;
-			} catch (e) {
-				this.errormsg = e.toString();
-			}
-			this.loading = false;
-		},
         async fetchConversations() {
             this.loading = true
             this.error = null
@@ -33,26 +22,25 @@ export default {
                         authorization: auth_id
                     }
                 })
-                conversations = response.data
+                this.conversations = response.data
 
-                for (let i = 0; i < conversations.length; i++) {
-                    let userData = await this.fethcUser(conversations[i].last_message.author)
-                    conversations[i].last_message.author = userData
+                for (let i = 0; i < this.conversations.length; i++) {
+                    let userData = await this.fetchUser(this.conversations[i].last_message.author)
+                    this.conversations[i].last_message.author = userData
                 }
-                this.conversations = conversations
                 // return conversations
             } catch (e) {
                 this.error = e.toString()
             }
             this.loading = false
         },
-        async fethcUser(id) {
+        async fetchUser(id) {
             this.error = null
 
 			let auth_id = sessionStorage.getItem('id')
 
             try {
-                let response = await this.$axios.get("/user/"+id, {
+                let response = await this.$axios.get("/users/" + id, {
                     headers: {
                         authorization: auth_id
                     }
@@ -62,15 +50,17 @@ export default {
                 this.error = e.toString()
             }
         }
-	},
-	async mounted() {
-        if (sessionStorage.getItem('logged_in') === false || sessionStorage.getItem('logged_in') === null) {
+    },
+    async mounted() {
+        if (sessionStorage.getItem('logged_in') !== "true") {
             console.log("Not logged in")
             this.$router.push('/')
         }
 
-		this.refresh();
+        // this.refresh();
         await this.fetchConversations();
+
+        console.log(this.conversations)
     }
 }
 </script>
@@ -81,13 +71,12 @@ export default {
 
         <h1 v-if="loading">Loading...</h1>
 
-        <div v-for="item in conversations" class="row card my-4" >
+        <div v-for="item in conversations" class="row card my-4">
             <div class="row g-0">
 
                 <div class="col-md-1 col-2">
                     <!-- <img src="..." class="img-thumbnail" alt="..."> -->
                     <img src="https://placehold.co/100" class="img-thumbnail" alt="...">
-                    
                 </div>
 
                 <div class="col-md-11 col-10">
@@ -95,13 +84,12 @@ export default {
                         <RouterLink :to="'/conversations/' + item.id">
                             <h5 class="card-title text-capitalize">{{ item.name }}</h5>
 						</RouterLink>
-                        <p class="card-text text-capitalize">{{ item.last_message.author.name +": " }}<small class="text-body-secondary">{{ item.last_message.content }}</small></p>
+                        <p class="card-text text-capitalize">{{ item.last_message.author.name +": " }}<small class="text-body-secondary">{{ item.last_message.text }}</small></p>
                     </div>
                 </div>
 
             </div>
         </div>
-		
 	</div>
 </template>
 

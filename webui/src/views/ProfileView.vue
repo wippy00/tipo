@@ -120,7 +120,7 @@ export default {
     },
 
     mounted() {
-        if (!sessionStorage.getItem('logged_in')) {
+        if (sessionStorage.getItem('logged_in') !== "true") {
             console.log("Not logged in")
             this.$router.push('/')
         }
@@ -137,7 +137,7 @@ export default {
         <ModalSuccess :msg="msg" @close="msg = null" />
 
         <div class="d-flex mb-5">
-            <img v-if="auth_photo" :src="'data:image/jpeg;base64,' + auth_photo" width="164" height="164" class="rounded-circle" style="object-fit: cover;">
+            <img v-if="auth_photo !== 'null'" :src="'data:image/jpeg;base64,' + auth_photo" width="164" height="164" class="rounded-circle" style="object-fit: cover;">
             <img v-else :src="'https://placehold.co/100x100/orange/white?text=' + auth_name" width="164" height="164" class="rounded-circle" style="object-fit: cover;">
 
             <h1 class="text-capitalize ms-3 mt-5 pt-2"> {{ auth_name }} </h1>

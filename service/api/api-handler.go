@@ -14,11 +14,11 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.POST("/login", rt.logIn)
 
 	// User routes
-	rt.router.GET("/users", rt.getUsers)
-	rt.router.PUT("/setUserName", rt.updateUserName)
-	rt.router.PUT("/setUserPhoto", rt.updateUserPhoto)
+	rt.router.PUT("/profile/name", rt.updateUserName)
+	rt.router.PUT("/profile/photo", rt.updateUserPhoto)
 
-	rt.router.GET("/user/:id", rt.getUser)
+	rt.router.GET("/users", rt.getUsers)
+	rt.router.GET("/users/:id", rt.getUser)
 
 	// Conversation routes
 	rt.router.GET("/conversations/:id", rt.getConversation)
