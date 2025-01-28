@@ -13,7 +13,9 @@ export default {
             conversations: null,
 
             message_input: "",
-            photo_input: null
+            photo_input: null,
+
+            refreshInterval: null
             
         }
         
@@ -141,9 +143,12 @@ export default {
             this.scrollToBottom();
         });
 
-        setInterval(() => {
+        this.refreshInterval = setInterval(() => { // Salva l'ID dell'intervallo
             this.refresh();
         }, 1000);
+    },
+    unmounted() {
+        clearInterval(this.refreshInterval)
     }
 }
 </script>
