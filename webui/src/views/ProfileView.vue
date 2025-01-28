@@ -38,7 +38,7 @@ export default {
             this.errormsg = null;
 
             try {
-                let response = await this.$axios.put("/setUserName", {
+                let response = await this.$axios.put("/profile/name", {
                     name: this.name_input
                 }, {
                     headers: {
@@ -81,7 +81,7 @@ export default {
                 let formData = new FormData();
                 formData.append('photo', this.photo_input);
 
-                let response = await this.$axios.put("/setUserPhoto", formData, {
+                let response = await this.$axios.put("/profile/photo", formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
                         'authorization': this.auth_id
