@@ -73,6 +73,9 @@ func (rt *_router) getConversationOfUser(w http.ResponseWriter, r *http.Request,
 
 	w.Header().Set("content-type", "application/json")
 	conversationsJSON, err := json.Marshal(conversations)
+
+	println(string(conversationsJSON))
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
