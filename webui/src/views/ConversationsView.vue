@@ -63,6 +63,13 @@ export default {
                 
                     }
                 }
+                
+                // sort by last message timestamp
+                this.conversations.sort((a, b) => {
+                    const dateA = a.last_message ? new Date(a.last_message.timestamp) : 0;
+                    const dateB = b.last_message ? new Date(b.last_message.timestamp) : 0;
+                    return dateB - dateA;
+                });
             
             } catch (e) {
                 this.error = e.toString()
@@ -108,22 +115,6 @@ export default {
                     }
                 })
                 this.$router.push('/conversations/' + response.data.id)
-                // console.log(response.code)
-                // console.log(response.data)
-                // console.log(response.data.id)
-                // if (response.code === 200) {
-                //     this.$router.push('/conversations/' + response.data.id)
-
-                // }
-                // if (response.code === 409) {
-                //     this.error = response.data
-                //     close.log(this.error)
-                // }
-                // if (response.code === 500) {
-                //     this.error = response.data
-                //     close.log(this.error)
-                // }
-
             } catch (e) {
                 this.error = e.toString()
             }
@@ -143,7 +134,6 @@ export default {
 
         await this.fetchAllUsers();
 
-        // console.log(this.conversations)
     }
 }
 </script>
@@ -173,7 +163,7 @@ export default {
             </div>
         </div>
 
-        <ul class="col-3 list-group mt-3">
+        <ul class="col-3 list-group mt-3 z-1">
             <li v-for="(item, index) in filteredUsers" :key="index"  class="list-group-item text-capitalize">  
                 {{ item.name }}
                 <button @click="startNewChat(item.id)" class="btn btn-primary float-end">Chat</button>
@@ -185,7 +175,8 @@ export default {
             <div v-if="item.cnv_type == 'group'" class="row g-0">
 
                 <div class="col-md-1 col-2">
-                    <img src="https://placehold.co/100" class="img-thumbnail" alt="...">
+                    <img v-if="item.photo" :src="'data:image/jpeg;base64,' + item.photo" class="rounded-1" style="object-fit: cover;">
+                    <img v-else :src="'https://placehold.co/100x100/orange/white?text=' + item.name" class="rounded-1" style="object-fit: cover;">
                 </div>
 
                 <div class="col-md-11 col-10">
@@ -193,7 +184,12 @@ export default {
                         <RouterLink :to="'/conversations/' + item.id">
                             <h5 class="card-title text-capitalize">{{ item.name }}</h5>
 						</RouterLink>
-                        <p v-if="item.last_message.id != 0" class="card-text text-capitalize">{{ item.last_message.author.name +": " }}<small class="text-body-secondary">{{ item.last_message.text }}</small></p>
+
+                        <div v-if="item.last_message.id != 0" class="d-flex justify-content-between">
+                            <p class="card-text text-capitalize mb-0">{{ item.last_message.author.name + ": " }}<small class="text-body-secondary">{{ item.last_message.text }}</small></p>
+                            <small class="text-body-secondary">{{ item.last_message.timestamp }}</small>
+                        </div>
+
                     </div>
                 </div>
 
@@ -202,7 +198,10 @@ export default {
             <div v-if="item.cnv_type == 'chat'" class="row g-0">
 
                 <div class="col-md-1 col-2">
-                    <img src="https://placehold.co/100" class="img-thumbnail" alt="...">
+                    <img v-if="item.participants[0].photo && item.participants[0].id != auth_id" :src="'data:image/jpeg;base64,' + item.participants[0].photo" width="100" height="100" class="rounded-1" style="object-fit: cover;">
+                    <img v-if="!item.participants[0].photo && item.participants[0].id != auth_id" :src="'https://placehold.co/100x100/orange/white?text=' + item.participants[0].name" width="100" height="100" class="rounded-1" style="object-fit: cover;">
+                    <img v-if="item.participants[1].photo && item.participants[1].id != auth_id" :src="'data:image/jpeg;base64,' + item.participants[1].photo" width="100" height="100" class="rounded-1" style="object-fit: cover;">
+                    <img v-if="!item.participants[1].photo && item.participants[1].id != auth_id" :src="'https://placehold.co/100x100/orange/white?text=' + item.participants[1].name" width="100" height="100" class="rounded-1" style="object-fit: cover;">
                 </div>
 
                 <div class="col-md-11 col-10">
@@ -211,7 +210,22 @@ export default {
                             <h5 v-if="item.participants[0].id != auth_id" class="card-title text-capitalize">{{ item.participants[0].name }}</h5>
                             <h5 v-if="item.participants[1].id != auth_id" class="card-title text-capitalize">{{ item.participants[1].name }}</h5>
                         </RouterLink>
-                        <p v-if="item.last_message.id != 0" class="card-text text-capitalize">{{ item.last_message.author.name +": " }}<small class="text-body-secondary">{{ item.last_message.text }}</small></p>
+
+                        <div v-if="item.last_message.id != 0" class="d-flex justify-content-between">
+                            
+                            <p v-if="item.last_message.text != null" class="card-text text-capitalize mb-0">
+                                {{ item.last_message.author.name + ": " }}
+                                <small class="text-body-secondary">{{ item.last_message.text }}</small> 
+                                <small v-if="item.last_message.photo != null"> 🖼️</small>
+                            </p>
+                            <p v-if="item.last_message.text == null" class="card-text text-capitalize mb-0">
+                                {{ item.last_message.author.name + ": " }}
+                                <small v-if="item.last_message.photo != null">🖼️</small>
+                            </p>
+                            
+                            <small class="text-body-secondary">{{ item.last_message.timestamp }}</small>
+                        </div>
+                    
                     </div>
                 </div>
 
