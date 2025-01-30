@@ -68,8 +68,7 @@ export default {
 				<form @submit.prevent="loginHandler">
 					<div class="mb-3">
 						<label for="name" class="form-label">name</label>
-						<input type="text" class="form-control" id="name" v-model="name"
-							aria-describedby="nameHelp">
+						<input type="text" class="form-control" id="name" v-model="name"aria-describedby="nameHelp">
 					</div>
 					<button type="submit" class="btn btn-primary">Submit</button>
 				</form>

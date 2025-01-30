@@ -6,49 +6,130 @@ export default {
 			errormsg: null,
 			loading: false,
 		    
-            conversations: null
-}
+            conversations: null,
+            
+            search: "",
+            users: null,
+            filteredUsers: null,
+
+            auth_id: null
+}           
 	},
+    watch: {
+        search: function() {
+            // console.log(this.search)
+            if (this.search.length < 3) {
+                return this.filteredUsers = []
+                
+            }
+
+            if (this.search === ":all") {
+                return this.filteredUsers = this.users
+            }
+
+            this.filteredUsers = this.users.filter(user => {
+                return user.name.toLowerCase().includes(this.search.toLowerCase())
+            })
+            // console.log(this.filteredUsers)
+        }
+    },
 	methods: {
         async fetchConversations() {
             this.loading = true
             this.error = null
 
-			let auth_id = sessionStorage.getItem('id')
+			this.auth_id = sessionStorage.getItem('id')
 
             try {
                 let response = await this.$axios.get("/conversations", {
                     headers: {
-                        authorization: auth_id
+                        authorization: this.auth_id
                     }
                 })
                 this.conversations = response.data
 
+                // console.log(this.conversations)
+                
+                // expand the last message author
                 for (let i = 0; i < this.conversations.length; i++) {
-                    let userData = await this.fetchUser(this.conversations[i].last_message.author)
-                    this.conversations[i].last_message.author = userData
+                    if (this.conversations[i].last_message == 0) {
+                        continue
+                    }
+
+                    for (let j = 0; j < this.conversations[i].participants.length; j++) {
+                        if (this.conversations[i].participants[j].id == this.conversations[i].last_message.author) { 
+                            this.conversations[i].last_message.author = this.conversations[i].participants[j] 
+                        }
+                
+                    }
                 }
-                // return conversations
+            
             } catch (e) {
                 this.error = e.toString()
             }
             this.loading = false
         },
-        async fetchUser(id) {
+        async fetchAllUsers() {
+            this.loading = true
             this.error = null
 
-			let auth_id = sessionStorage.getItem('id')
+			this.auth_id = sessionStorage.getItem('id')
 
             try {
-                let response = await this.$axios.get("/users/" + id, {
+                let response = await this.$axios.get("/users", {
                     headers: {
-                        authorization: auth_id
+                        authorization: this.auth_id
                     }
                 })
-                return response.data
+                this.users = response.data
+
             } catch (e) {
                 this.error = e.toString()
             }
+            this.loading = false
+
+        },
+
+        async startNewChat(user_id) {
+            // console.log(user_id)
+            this.error = null
+
+            this.auth_id = sessionStorage.getItem('id')
+            try {
+                let response = await this.$axios.post("/conversations", {
+                    name: "",
+                    photo: null,
+                    cnv_type: "chat",
+                    participants: [parseInt(user_id)],
+                }, 
+                {
+                    headers: {
+                        authorization: this.auth_id
+                    }
+                })
+                this.$router.push('/conversations/' + response.data.id)
+                // console.log(response.code)
+                // console.log(response.data)
+                // console.log(response.data.id)
+                // if (response.code === 200) {
+                //     this.$router.push('/conversations/' + response.data.id)
+
+                // }
+                // if (response.code === 409) {
+                //     this.error = response.data
+                //     close.log(this.error)
+                // }
+                // if (response.code === 500) {
+                //     this.error = response.data
+                //     close.log(this.error)
+                // }
+
+            } catch (e) {
+                this.error = e.toString()
+            }
+            
+
+
         }
     },
     async mounted() {
@@ -60,7 +141,9 @@ export default {
         // this.refresh();
         await this.fetchConversations();
 
-        console.log(this.conversations)
+        await this.fetchAllUsers();
+
+        // console.log(this.conversations)
     }
 }
 </script>
@@ -70,12 +153,38 @@ export default {
 		<!-- <ErrorMsg v-if="error" :msg="errormsg"></ErrorMsg> -->
 
         <h1 v-if="loading">Loading...</h1>
+        <div class="row">
+            <div class="col-10">
+                <label for="search" class="form-label fw-bold">Search Friends</label>
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+                        </svg>
+                    </span>
+                    <input v-model="search" type="text" class="form-control" placeholder="For all users type ':all'" aria-label="Search" aria-describedby="Search-field">
+                </div>
+            </div>
+            <div class="col-2">
+                <label for="search" class="form-label fw-bold ">Create Group</label>
+                <div class="input-group">
+                    <button type="button" class="btn btn-primary float-end">Create</button>
+                </div>
+            </div>
+        </div>
 
-        <div v-for="item in conversations" class="row card my-4">
-            <div class="row g-0">
+        <ul class="col-3 list-group mt-3">
+            <li v-for="(item, index) in filteredUsers" :key="index"  class="list-group-item text-capitalize">  
+                {{ item.name }}
+                <button @click="startNewChat(item.id)" class="btn btn-primary float-end">Chat</button>
+            </li>
+        </ul>
+
+        <div v-for="(item, index) in conversations" :key="index" class="row card my-4">
+            
+            <div v-if="item.cnv_type == 'group'" class="row g-0">
 
                 <div class="col-md-1 col-2">
-                    <!-- <img src="..." class="img-thumbnail" alt="..."> -->
                     <img src="https://placehold.co/100" class="img-thumbnail" alt="...">
                 </div>
 
@@ -84,7 +193,25 @@ export default {
                         <RouterLink :to="'/conversations/' + item.id">
                             <h5 class="card-title text-capitalize">{{ item.name }}</h5>
 						</RouterLink>
-                        <p class="card-text text-capitalize">{{ item.last_message.author.name +": " }}<small class="text-body-secondary">{{ item.last_message.text }}</small></p>
+                        <p v-if="item.last_message.id != 0" class="card-text text-capitalize">{{ item.last_message.author.name +": " }}<small class="text-body-secondary">{{ item.last_message.text }}</small></p>
+                    </div>
+                </div>
+
+            </div>
+
+            <div v-if="item.cnv_type == 'chat'" class="row g-0">
+
+                <div class="col-md-1 col-2">
+                    <img src="https://placehold.co/100" class="img-thumbnail" alt="...">
+                </div>
+
+                <div class="col-md-11 col-10">
+                    <div class="card-body">
+                        <RouterLink :to="'/conversations/' + item.id">
+                            <h5 v-if="item.participants[0].id != auth_id" class="card-title text-capitalize">{{ item.participants[0].name }}</h5>
+                            <h5 v-if="item.participants[1].id != auth_id" class="card-title text-capitalize">{{ item.participants[1].name }}</h5>
+                        </RouterLink>
+                        <p v-if="item.last_message.id != 0" class="card-text text-capitalize">{{ item.last_message.author.name +": " }}<small class="text-body-secondary">{{ item.last_message.text }}</small></p>
                     </div>
                 </div>
 
@@ -94,7 +221,7 @@ export default {
 </template>
 
 <style>
-.container {
+/* .container {
 	height: 100vh;
-}
+} */
 </style>
