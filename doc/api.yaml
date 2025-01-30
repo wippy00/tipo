@@ -189,6 +189,47 @@ paths:
 
         "401":
           $ref: "#/components/responses/401_Unauthorized"
+    post:
+      tags: ["conversation"]
+      security:
+        - bearerAuth: []
+      summary: Create conversation
+      description: Create conversation with a list of participants, the user who created the conversation is included
+      operationId: newConversation
+      requestBody:
+        description: Conversation details
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: "#/components/schemas/conversationName"
+                photo:
+                  $ref: "#/components/schemas/conversationPhoto"
+                cnv_type:
+                  $ref: "#/components/schemas/conversationType"
+                participants:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/userId"
+                  default: []
+                  minimum: 1
+                
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Conversation"
+              example: {"id": 2,"name": "" ,"cnv_type": "chat","participants": [{"id": 2,"name": "rino","photo": null},{"id": 3,"name": "gianna","photo": null}],"last_message": null}
+        "401":
+          $ref: "#/components/responses/401_Unauthorized"
+        "409":
+          $ref: "#/components/responses/409_Conflict"
+
 
   /conversations/{conversation_id}:
     get:
@@ -649,6 +690,7 @@ components:
       description: message photo properties
       type: string
       format: binary
+      example: "[]binary"
 
     messageTimestamp:
       description: date time of the message creation
@@ -786,7 +828,7 @@ components:
             type: object
             properties:
               message:
-                description: Conflict message
+                description: Conflict
                 type: string
                 example: "Conflict"
                 minLength: 0

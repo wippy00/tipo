@@ -59,6 +59,8 @@ type AppDatabase interface {
 	AddUserToConversation(id_conversation int64, id_auth int64, id_user int64) (Conversation, error)
 	RemoveUserFromConversation(id_conversation int64, id_auth int64, id_user int64) error
 
+	CreateConversation(id_auth int64, conversation Conversation) (Conversation, error)
+
 	// Message
 	GetMessagesOfConversation(id_conversation int64, id_auth int64) ([]Message, error)
 
@@ -89,7 +91,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 		// ############################################################
 		user_table := `CREATE TABLE IF NOT EXISTS users (
 			id INTEGER NOT NULL PRIMARY KEY, 
-			name VARCHAR(30) NOT NULL,
+			name VARCHAR(30) NOT NULL UNIQUE,
 			photo BLOB
 		);`
 		_, err = db.Exec(user_table)

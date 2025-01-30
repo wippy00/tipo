@@ -20,6 +20,14 @@ func NewUser(user database.User) User {
 	}
 }
 
+func DbUser(user User) database.User {
+	return database.User{
+		Id:    user.Id,
+		Name:  user.Name,
+		Photo: user.Photo,
+	}
+}
+
 type Conversation struct {
 	Id           int64   `json:"id"`
 	Name         string  `json:"name"`
@@ -36,6 +44,14 @@ func convertParticipants(dbParticipants []database.User) []User {
 	}
 	return participants
 }
+func convertDbParticipants(participants []User) []database.User {
+	dbParticipants := make([]database.User, len(participants))
+	for i, user := range participants {
+		dbParticipants[i] = DbUser(user)
+	}
+	return dbParticipants
+
+}
 
 func NewConversation(conversation database.Conversation) Conversation {
 	return Conversation{
@@ -45,6 +61,17 @@ func NewConversation(conversation database.Conversation) Conversation {
 		Cnv_type:     conversation.Cnv_type,
 		Participants: convertParticipants(conversation.Participants),
 		Last_message: NewMessage(conversation.Last_message),
+	}
+}
+
+func DbConversation(conversation Conversation) database.Conversation {
+	return database.Conversation{
+		Id:           conversation.Id,
+		Name:         conversation.Name,
+		Photo:        conversation.Photo,
+		Cnv_type:     conversation.Cnv_type,
+		Participants: convertDbParticipants(conversation.Participants),
+		Last_message: DbMessage(conversation.Last_message),
 	}
 }
 

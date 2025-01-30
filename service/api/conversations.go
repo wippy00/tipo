@@ -6,7 +6,18 @@ import (
 	"strconv"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/wippy00/wasa-text/service/database"
 )
+
+func convertToDatabaseUsers(participants []int64) []database.User {
+	users := make([]database.User, len(participants))
+	for i, id := range participants {
+		users[i] = database.User{Id: id}
+	}
+	return users
+}
+
+// ###############################################
 
 func (rt *_router) getConversation(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	_, hasAut, err := checkAuth(r, rt)
@@ -110,12 +121,12 @@ func (rt *_router) updateConversationName(w http.ResponseWriter, r *http.Request
 	}
 
 	w.Header().Set("content-type", "application/json")
-	userJSON, err := json.Marshal(NewConversation(dbConversation))
+	conversationJSON, err := json.Marshal(NewConversation(dbConversation))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	_, _ = w.Write(userJSON)
+	_, _ = w.Write(conversationJSON)
 
 }
 
@@ -169,12 +180,12 @@ func (rt *_router) updateConversationPhoto(w http.ResponseWriter, r *http.Reques
 	}
 
 	w.Header().Set("content-type", "application/json")
-	userJSON, err := json.Marshal(NewConversation(dbConversation))
+	conversationJSON, err := json.Marshal(NewConversation(dbConversation))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	_, _ = w.Write(userJSON)
+	_, _ = w.Write(conversationJSON)
 
 }
 
@@ -223,12 +234,12 @@ func (rt *_router) addUserToConversation(w http.ResponseWriter, r *http.Request,
 	}
 
 	w.Header().Set("content-type", "application/json")
-	userJSON, err := json.Marshal(NewConversation(dbConversation))
+	conversationJSON, err := json.Marshal(NewConversation(dbConversation))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	_, _ = w.Write(userJSON)
+	_, _ = w.Write(conversationJSON)
 }
 
 func (rt *_router) removeUserFromConversation(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -269,4 +280,69 @@ func (rt *_router) removeUserFromConversation(w http.ResponseWriter, r *http.Req
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+type ConversationRequest struct {
+	Name         string  `json:"name"`
+	Photo        []byte  `json:"photo"`
+	Cnv_type     string  `json:"cnv_type"`
+	Participants []int64 `json:"participants"`
+}
+
+func (rt *_router) createConversation(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	var conversationRequest ConversationRequest
+
+	auth_id, hasAut, err := checkAuth(r, rt)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	if !hasAut {
+		http.Error(w, "not authorized to create a new conversation", http.StatusUnauthorized)
+		return
+	}
+
+	err = json.NewDecoder(r.Body).Decode(&conversationRequest)
+	if err != nil && err.Error() == "conversation type not valid" {
+		http.Error(w, "conversation type not valid "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	newConversation, err := rt.db.CreateConversation(auth_id, database.Conversation{
+		Name:         conversationRequest.Name,
+		Photo:        conversationRequest.Photo,
+		Cnv_type:     conversationRequest.Cnv_type,
+		Participants: convertToDatabaseUsers(conversationRequest.Participants),
+	})
+
+	if err != nil && err.Error() == "conversation can't have less than one participant" {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err != nil && err.Error() == "chat conversation can't have more than two participants" {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err != nil && err.Error() == "conversation already exist" {
+		http.Error(w, err.Error(), http.StatusConflict)
+		return
+	}
+	if err != nil && err.Error() == "user in partecipants not found" {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("content-type", "application/json")
+	conversationJSON, err := json.Marshal(NewConversation(newConversation))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	_, _ = w.Write(conversationJSON)
 }

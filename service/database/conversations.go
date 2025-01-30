@@ -1,8 +1,53 @@
 package database
 
 import (
+	"database/sql"
 	"fmt"
 )
+
+func (db *appdbimpl) ChatConversationExist(user1 int64, user2 int64) (bool, error) {
+	var conversation_id int64
+
+	err := db.c.QueryRow(`
+		SELECT
+			conversations.id
+		FROM
+			conversations
+		JOIN
+			conversations_members ON conversations.id = conversations_members.id_conversations
+		WHERE 
+			conversations.cnv_type = 'chat'
+		AND
+			conversations_members.id_user IN ($1, $2)
+		GROUP BY
+			conversations.id, conversations.name
+
+		HAVING COUNT(DISTINCT conversations_members.id_user) = 2;
+
+	`, user1, user2).Scan(&conversation_id)
+	if err == sql.ErrNoRows {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("database error checking if conversation exist: %w", err)
+	}
+
+	return true, nil
+}
+
+func (db *appdbimpl) ConversationNameExist(name_conversation string) (bool, error) {
+	var rowsCount int64
+
+	err := db.c.QueryRow(`SELECT count(name) AS rowsCount FROM conversations WHERE name = $1`, name_conversation).Scan(&rowsCount)
+	if err != nil {
+		return false, fmt.Errorf("database error checking if conversation name exist: %w", err)
+	}
+	if rowsCount > 0 {
+		return true, nil
+	} else {
+		return false, nil
+	}
+}
 
 func (db *appdbimpl) IsGroup(id_conversation int64) (bool, error) {
 	var cnv_type string
@@ -231,7 +276,7 @@ func (db *appdbimpl) GetConversationsOfUser(id int64) ([]Conversation, error) {
 func (db *appdbimpl) UpdateConversationName(id_conversation int64, id_auth int64, new_name string) (Conversation, error) {
 	var conversation Conversation
 
-	//Check if is a group
+	// Check if is a group
 	isGroup, err := db.IsGroup(id_conversation)
 	if err != nil {
 		return Conversation{}, fmt.Errorf("database error checking if is group: %w", err)
@@ -249,8 +294,9 @@ func (db *appdbimpl) UpdateConversationName(id_conversation int64, id_auth int64
 		return Conversation{}, fmt.Errorf("auth user is not in this group")
 	}
 
-	//Update conversation name
+	// Update conversation name
 	res, err := db.c.Exec(`UPDATE conversations SET name = $1 WHERE id = $2`, new_name, id_conversation)
+
 	if err != nil {
 		return Conversation{}, fmt.Errorf("database error updating conversation name: %w", err)
 	}
@@ -274,7 +320,7 @@ func (db *appdbimpl) UpdateConversationName(id_conversation int64, id_auth int64
 func (db *appdbimpl) UpdateConversationPhoto(id_conversation int64, id_auth int64, new_photo []byte) (Conversation, error) {
 	var conversation Conversation
 
-	//Check if is a group
+	// Check if is a group
 	isGroup, err := db.IsGroup(id_conversation)
 	if err != nil {
 		return Conversation{}, fmt.Errorf("database error checking if is group: %w", err)
@@ -315,7 +361,7 @@ func (db *appdbimpl) UpdateConversationPhoto(id_conversation int64, id_auth int6
 
 func (db *appdbimpl) AddUserToConversation(id_conversation int64, id_auth int64, id_user int64) (Conversation, error) {
 
-	//Check if is a group
+	// Check if is a group
 	isGroup, err := db.IsGroup(id_conversation)
 	if err != nil {
 		return Conversation{}, fmt.Errorf("database error checking if is group: %w", err)
@@ -324,7 +370,7 @@ func (db *appdbimpl) AddUserToConversation(id_conversation int64, id_auth int64,
 		return Conversation{}, fmt.Errorf("conversation is not a group")
 	}
 
-	//Check if auth user is in the conversation
+	// Check if auth user is in the conversation
 	isUserInConversation, err := db.IsUserInConversation(id_conversation, id_auth)
 	if err != nil {
 		return Conversation{}, fmt.Errorf("database error checking if user is in group: %w", err)
@@ -333,7 +379,7 @@ func (db *appdbimpl) AddUserToConversation(id_conversation int64, id_auth int64,
 		return Conversation{}, fmt.Errorf("auth user is not in this group")
 	}
 
-	//Check if user is already in conversation
+	// Check if user is already in conversation
 	var rowsCount int64
 	erri := db.c.QueryRow(`SELECT count(*) AS rowsCount FROM conversations_members WHERE id_conversations = $1 AND id_user = $2`, id_conversation, id_user).Scan(&rowsCount)
 	if erri != nil {
@@ -359,7 +405,7 @@ func (db *appdbimpl) AddUserToConversation(id_conversation int64, id_auth int64,
 
 func (db *appdbimpl) RemoveUserFromConversation(id_conversation int64, id_auth int64, id_user int64) error {
 
-	//Check if auth user is in the conversation
+	// Check if auth user is in the conversation
 	isUserInConversation, err := db.IsUserInConversation(id_conversation, id_auth)
 	if err != nil {
 		return fmt.Errorf("database error checking if user is in conversation: %w", err)
@@ -374,7 +420,7 @@ func (db *appdbimpl) RemoveUserFromConversation(id_conversation int64, id_auth i
 		return fmt.Errorf("database error removing user from conversation: %w", err)
 	}
 
-	//	Check if is a group
+	// Check if is a group
 	isGroup, err := db.IsGroup(id_conversation)
 	if err != nil {
 		return fmt.Errorf("database error checking if is group: %w", err)
@@ -411,4 +457,93 @@ func (db *appdbimpl) RemoveUserFromConversation(id_conversation int64, id_auth i
 	}
 
 	return nil
+}
+
+func (db *appdbimpl) CreateConversation(id_auth int64, conversation Conversation) (Conversation, error) {
+
+	// Check if conversation type is correct
+	if !(conversation.Cnv_type == "chat" || conversation.Cnv_type == "group") {
+		return Conversation{}, fmt.Errorf("conversation type not valid")
+	}
+
+	// Remove auth user from participants if present
+	for i := 0; i < len(conversation.Participants); i++ {
+		if conversation.Participants[i].Id == id_auth {
+			//                                                     i non compreso					i compreso
+			conversation.Participants = append(conversation.Participants[:i], conversation.Participants[i+1:]...)
+		}
+	}
+
+	// Check if conversation has participants
+	if len(conversation.Participants) < 1 {
+		return Conversation{}, fmt.Errorf("conversation can't have less than one participant")
+	}
+
+	// Check if chat conversation has more than two participants
+	if conversation.Cnv_type == "chat" && len(conversation.Participants) >= 2 {
+		return Conversation{}, fmt.Errorf("chat conversation can't have more than two participant")
+	}
+
+	// Check if conversation exist
+	if conversation.Cnv_type == "group" {
+
+		nameExist, err := db.ConversationNameExist(conversation.Name)
+		if err != nil {
+			return Conversation{}, err
+		}
+		if nameExist {
+			return Conversation{}, fmt.Errorf("conversation already exist")
+		}
+	}
+	if conversation.Cnv_type == "chat" {
+		convExist, err := db.ChatConversationExist(id_auth, conversation.Participants[0].Id)
+		if err != nil {
+			return Conversation{}, err
+		}
+		if convExist {
+			return Conversation{}, fmt.Errorf("conversation already exist")
+		}
+	}
+
+	// Check if users exist
+	for i := 0; i < len(conversation.Participants); i++ {
+
+		_, userExist, err := db.UserExistById(conversation.Participants[i].Id)
+		if err != nil {
+			return Conversation{}, fmt.Errorf("database error checking if user exist: %w", err)
+		}
+		if !userExist {
+			return Conversation{}, fmt.Errorf("user in partecipants not found")
+		}
+	}
+
+	// Create conversation
+	res, err := db.c.Exec(`INSERT INTO conversations (name, photo, cnv_type) VALUES ($1, $2, $3)`, conversation.Name, conversation.Photo, conversation.Cnv_type)
+	if err != nil {
+		return Conversation{}, fmt.Errorf("database error creating conversation: %w", err)
+	}
+
+	conversation_id, err := res.LastInsertId()
+	if err != nil {
+		return Conversation{}, fmt.Errorf("database error getting last inserted id of conversation: %w", err)
+	}
+
+	// Add auth user to conversation participants
+	conversation.Participants = append(conversation.Participants, User{Id: id_auth})
+
+	// Insert users to conversation
+	for i := 0; i < len(conversation.Participants); i++ {
+
+		_, err = db.c.Exec(`INSERT INTO conversations_members (id_conversations, id_user) VALUES ($1, $2)`, conversation_id, conversation.Participants[i].Id)
+		if err != nil {
+			return Conversation{}, fmt.Errorf("database error adding user to conversation: %w", err)
+		}
+	}
+
+	conversation, err = db.GetConversation(conversation_id)
+	if err != nil {
+		return Conversation{}, fmt.Errorf("database error getting conversation: %w", err)
+	}
+
+	return conversation, nil
 }

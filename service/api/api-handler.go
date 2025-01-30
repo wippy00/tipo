@@ -10,7 +10,7 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.GET("/", rt.getHelloWorld)
 	rt.router.GET("/context", rt.wrap(rt.getContextReply))
 
-	//login
+	// Login
 	rt.router.POST("/login", rt.logIn)
 
 	// User routes
@@ -22,12 +22,13 @@ func (rt *_router) Handler() http.Handler {
 
 	// Conversation routes
 	rt.router.GET("/conversations/:id", rt.getConversation)
-	rt.router.PUT("/conversations/:id/setGroupName", rt.updateConversationName)
-	rt.router.PUT("/conversations/:id/setGroupPhoto", rt.updateConversationPhoto)
-	rt.router.POST("/conversations/:conversation_id/addToGroup/:user_id", rt.addUserToConversation)
+	rt.router.PUT("/conversations/:id/name", rt.updateConversationName)
+	rt.router.PUT("/conversations/:id/photo", rt.updateConversationPhoto)
+	rt.router.POST("/conversations/:conversation_id/add/:user_id", rt.addUserToConversation)
 	rt.router.DELETE("/conversations/:conversation_id/leave", rt.removeUserFromConversation)
 
 	rt.router.GET("/conversations", rt.getConversationOfUser)
+	rt.router.POST("/conversations", rt.createConversation)
 
 	// Message routes
 	rt.router.GET("/conversations/:id/messages", rt.getMessagesOfConversation)
