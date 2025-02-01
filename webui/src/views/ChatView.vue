@@ -46,7 +46,7 @@ export default {
         async fetchMessages(conversations_id) {
             // this.error = null
 
-			let auth_id = sessionStorage.getItem('id')
+			const auth_id = sessionStorage.getItem('id')
 
             try {
                 let response = await this.$axios.get("/conversations/"+conversations_id+"/messages", {
@@ -71,7 +71,7 @@ export default {
         async fetchConversations(conversations_id) {
             // this.error = null
 
-			let auth_id = sessionStorage.getItem('id')
+			const auth_id = sessionStorage.getItem('id')
 
             try {
                 let response = await this.$axios.get("/conversations/" + conversations_id, {
@@ -109,7 +109,7 @@ export default {
 			}
             this.error = null
 
-            let auth_id = sessionStorage.getItem('id')
+            const auth_id = sessionStorage.getItem('id')
 
             try {
                 let response = await this.$axios.post("/conversations/"+this.$route.params.id+"/messages", {
@@ -121,6 +121,7 @@ export default {
                 })
 
                 this.messages = response.data
+                this.message_input = ""
                 this.refresh()
 
             } catch (e) {
@@ -130,6 +131,27 @@ export default {
             this.$nextTick(() => {
                 this.scrollToBottom();
             });
+        },
+
+        async deleteMessage(event) {
+            event.preventDefault()
+            
+            console.log(event.target.message_id.value)
+            
+            const message_id = event.target.message_id.value;
+            const auth_id = sessionStorage.getItem('id')
+
+            try {
+                let response = await this.$axios.delete("/conversations/"+ this.$route.params.id +"/messages/" + message_id, {
+                    headers: {
+                        authorization: auth_id
+                    }
+                })
+                this.refresh()
+                
+            } catch (e) {
+                this.error = e.toString()
+            }
         },
         
         scrollToBottom() {
@@ -154,9 +176,9 @@ export default {
             this.scrollToBottom();
         });
 
-        this.refreshInterval = setInterval(() => { // Salva l'ID dell'intervallo
-            this.refresh();
-        }, 1000);
+        // this.refreshInterval = setInterval(() => { // Salva l'ID dell'intervallo
+        //     this.refresh();
+        // }, 1000);
     },
     unmounted() {
         clearInterval(this.refreshInterval)
@@ -182,7 +204,12 @@ export default {
                     <img v-if="message.author.photo" :src="'data:image/jpeg;base64,' + message.author.photo" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
                     <img v-else :src="'https://placehold.co/100x100/orange/white?text=' + message.author.name" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
                     <h5 class="card-title ms-2 mt-3 text-capitalize"> {{ message.author.name }} </h5>
+                    <form @submit.prevent="deleteMessage" class="ms-auto m-1">
+                        <input type="hidden" name="message_id" :value="message.id">
+                        <button class="btn btn-primary" type="submit">Delete</button>
+                    </form>
                 </div>
+
 
                 <div class="card-body">
                     <img v-if="message.photo" :src="'data:image/jpeg;base64,' + message.photo" class="card-img-top rounded-3" alt="...">
