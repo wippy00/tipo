@@ -22,13 +22,18 @@ export default {
 			localStorage.removeItem('photo');
 			
 			sessionStorage.setItem("logged_in", false);
+			this.refreshData();
+
 			this.$router.push('/');
+		},
+		refreshData() {
+			this.auth_id = sessionStorage.getItem('id');
+			this.auth_name = sessionStorage.getItem('name');
+			this.auth_photo = localStorage.getItem('photo');
 		}
 	},
 	mounted() {
-		this.auth_id = sessionStorage.getItem('id');
-		this.auth_name = sessionStorage.getItem('name');
-		this.auth_photo = localStorage.getItem('photo');
+		this.refreshData();
 	}
 }
 </script>
@@ -75,7 +80,7 @@ export default {
 	<div class="mt-5 p-3"></div>
 	
 	<main>
-		<RouterView />
+		<RouterView @login-success="refreshData" />
 	</main>
 
 </template>

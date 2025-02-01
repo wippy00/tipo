@@ -12,7 +12,12 @@ export default {
             users: null,
             filteredUsers: null,
 
-            auth_id: null
+            auth_id: null,
+
+            showCreateGroup: false,
+            group_name: "",
+            group_photo: null,
+            checked_users: []
 }           
 	},
     watch: {
@@ -118,9 +123,35 @@ export default {
             } catch (e) {
                 this.error = e.toString()
             }
+        },
+        async startNewGroup(event) {
+            event.preventDefault()
+            this.error = null
+
+            var formData = new FormData();
+            formData.append('name', this.group_name);
+            formData.append('photo', this.group_photo);
+            formData.append('cnv_type', JSON.stringify("group"));
+            formData.append('participants', JSON.stringify(this.checked_users));
             
-
-
+            this.auth_id = sessionStorage.getItem('id')
+            try {
+                let response = await this.$axios.post("/conversations", formData,{
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        authorization: this.auth_id
+                    }
+                })
+                this.$router.push('/conversations/' + response.data.id)
+            } catch (e) {
+                this.error = e.toString()
+            }
+        },
+        file_inputHandler(event) {
+            this.group_photo = event.target.files[0];
+        },
+        showCreateGroupHandler() {
+            this.showCreateGroup = !this.showCreateGroup
         }
     },
     async mounted() {
@@ -144,6 +175,7 @@ export default {
 
         <h1 v-if="loading">Loading...</h1>
         <div class="row">
+
             <div class="col-10">
                 <label for="search" class="form-label fw-bold">Search Friends</label>
                 <div class="input-group">
@@ -155,11 +187,43 @@ export default {
                     <input v-model="search" type="text" class="form-control" placeholder="For all users type ':all'" aria-label="Search" aria-describedby="Search-field">
                 </div>
             </div>
+
             <div class="col-2">
                 <label for="search" class="form-label fw-bold ">Create Group</label>
-                <div class="input-group">
-                    <button type="button" class="btn btn-primary float-end">Create</button>
+                <div>
+                    <button @click="showCreateGroupHandler" type="button" class="btn btn-primary">Create</button>
                 </div>
+            </div>
+
+            <div v-if="showCreateGroup" class="col-8 border p-3 rounded-3 mt-3 mx-auto">
+                <h1 class="text-center">Create new group</h1>
+                <form @submit.prevent="startNewGroup">
+                    
+                    <div class="mb-3 row">
+                        <div class="col-6">
+                            <label for="group_name" class="form-label">Name</label>
+                            <input v-model="group_name" type="text" class="form-control" id="group_name" placeholder="Group name" aria-describedby="group_name">
+                        </div>
+                        
+                        <div class="col-6">
+                            <label for="group_photo" class="form-label">Photo</label>
+                            <input v-on:change="file_inputHandler" type="file" id="group_photo" accept="image/*" class="form-control" aria-describedby="group_photo">					
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">    
+                        <label for="photo" class="form-label">Participants</label>
+    
+                        <div v-for="item in users" class="form-check">
+                            <input v-model="checked_users" class="form-check-input" type="checkbox" :value="item.id" :id="item.id">
+                            <label class="form-check-label text-capitalize" :for="item.id"> {{ item.name }} </label>
+                        </div>
+
+                    </div>
+                    
+                    
+					<button type="submit" class="btn btn-primary">Submit</button>
+				</form>
             </div>
         </div>
 
@@ -170,13 +234,15 @@ export default {
             </li>
         </ul>
 
+
+        <!-- conversation list section -->
         <div v-for="(item, index) in conversations" :key="index" class="row card my-4">
             
             <div v-if="item.cnv_type == 'group'" class="row g-0">
 
                 <div class="col-md-1 col-2">
-                    <img v-if="item.photo" :src="'data:image/jpeg;base64,' + item.photo" class="rounded-1" style="object-fit: cover;">
-                    <img v-else :src="'https://placehold.co/100x100/orange/white?text=' + item.name" class="rounded-1" style="object-fit: cover;">
+                    <img v-if="item.photo" :src="'data:image/jpeg;base64,' + item.photo" width="100" height="100" class="rounded-1"  style="object-fit: cover;">
+                    <img v-else :src="'https://placehold.co/100x100/orange/white?text=' + item.name" width="100" height="100" class="rounded-1" style="object-fit: cover;">
                 </div>
 
                 <div class="col-md-11 col-10">

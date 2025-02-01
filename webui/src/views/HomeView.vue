@@ -28,7 +28,7 @@ export default {
 				sessionStorage.setItem("name", response.data.name);
 				localStorage.setItem("photo", response.data.photo);
 
-
+				this.$emit("login-success")
 				this.$router.push({ path: '/conversations' })
 
 			} catch (event) {

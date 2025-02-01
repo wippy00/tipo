@@ -60,7 +60,7 @@ paths:
         - bearerAuth: []
       summary: Get user info
       description: Get user info from its id
-      operationId: getUser
+      operationId: getUsers
       responses:
         "200":
           description: Return all users info
@@ -72,7 +72,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/User"
                 default: []
-                example: [{"id": 1,"name": "mariOne","photo": null},{"id": 2,"name": "rino","photo": null},{"id": 3,"name": "gianna","photo": null}]
+                example: [{"id": 1,"name": "mariOne","photo": "null"},{"id": 2,"name": "rino","photo": "null"},{"id": 3,"name": "gianna","photo": "null"}]
         "401":
           $ref: "#/components/responses/401_Unauthorized"
         "404":
@@ -185,7 +185,7 @@ paths:
                     default: []
                     items:
                       $ref: "#/components/schemas/Conversation"
-                example: [{"id": 1,"name": "I salamini il ritorno 2","photo": null,"cnv_type": "group","participants": [{"id": 1,"name": "mariOne","photo": null},{"id": 2,"name": "rino","photo": null},{"id": 3,"name": "gianna","photo": null},{"id": 4,"name": "franco","photo": null},{"id": 5,"name": "cristina","photo": null}],"last_message": {"id": 17,"text": "Niente de che","photo": null,"author": 2,"recipient": 1,"forwarded_source": 0,"timestamp": "2025-01-23T16:35:29Z"}}]
+                example: [{"id": 1,"name": "I salamini il ritorno 2","photo": "null","cnv_type": "group","participants": [{"id": 1,"name": "mariOne","photo": "null"},{"id": 2,"name": "rino","photo": "null"},{"id": 3,"name": "gianna","photo": "null"},{"id": 4,"name": "franco","photo": "null"},{"id": 5,"name": "cristina","photo": "null"}],"last_message": {"id": 17,"text": "Niente de che","photo": "null","author": 2,"recipient": 1,"forwarded_source": 0,"timestamp": "2025-01-23T16:35:29Z"}}]
 
         "401":
           $ref: "#/components/responses/401_Unauthorized"
@@ -215,8 +215,7 @@ paths:
                   items:
                     $ref: "#/components/schemas/userId"
                   default: []
-                  minimum: 1
-                
+                  minItems: 1                
       responses:
         "200":
           description: Ok
@@ -224,7 +223,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Conversation"
-              example: {"id": 2,"name": "" ,"cnv_type": "chat","participants": [{"id": 2,"name": "rino","photo": null},{"id": 3,"name": "gianna","photo": null}],"last_message": null}
+              example: {"id": 2,"name": "" ,"cnv_type": "chat","participants": [{"id": 2,"name": "rino","photo": "null"},{"id": 3,"name": "gianna","photo": "null"}],"last_message": "null"}
         "401":
           $ref: "#/components/responses/401_Unauthorized"
         "409":
@@ -253,7 +252,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Conversation"
-              example: {"id": 2,"name": "Rino - Gianna","photo": null,"cnv_type": "chat","participants": [{"id": 2,"name": "rino","photo": null},{"id": 3,"name": "gianna","photo": null}],"last_message": {"id": 4,"text": "Dove vai?","photo": null,"author": 3,"recipient": 2,"forwarded_source": 0,"timestamp": "2025-01-22T17:23:18Z"}}
+              example: {"id": 2,"name": "Rino - Gianna","photo": "null","cnv_type": "chat","participants": [{"id": 2,"name": "rino","photo": "null"},{"id": 3,"name": "gianna","photo": "null"}],"last_message": {"id": 4,"text": "Dove vai?","photo": "null","author": 3,"recipient": 2,"forwarded_source": 0,"timestamp": "2025-01-22T17:23:18Z"}}
         "401":
           $ref: "#/components/responses/401_Unauthorized"
         "404":
@@ -414,7 +413,7 @@ paths:
                 default: []
                 items:
                   $ref: "#/components/schemas/Message"
-                example: [{"id": 3,"text": "Brella","photo": null,"author": 2,"recipient": 2,"forwarded_source": 0,"timestamp": "2025-01-22T17:22:15Z"},{"id": 4,"text": "Ma dove vai?","photo": null,"author": 3,"recipient": 2,"forwarded_source": 0,"timestamp": "2025-01-22T17:23:18Z"}]
+                example: [{"id": 3,"text": "Brella","photo": "null","author": 2,"recipient": 2,"forwarded_source": 0,"timestamp": "2025-01-22T17:22:15Z"},{"id": 4,"text": "Ma dove vai?","photo": "null","author": 3,"recipient": 2,"forwarded_source": 0,"timestamp": "2025-01-22T17:23:18Z"}]
         "404":
           $ref: "#/components/responses/404_NotFound"
     post:
@@ -610,7 +609,7 @@ components:
       example:
         id: 1
         name: Mario
-        photo: null
+        photo: "null"
       
 
     conversationId:
@@ -667,10 +666,10 @@ components:
       example:
         id: 1
         name: I salamini
-        photo: null
+        photo: "null"
         cnv_type: group
-        participants: [{id: 1, name: Mario, photo: null}, {id: 2, name: Luigi, photo: null}]
-        last_message: null
+        participants: [{id: 1, name: Mario, photo: "null"}, {id: 2, name: Luigi, photo: "null"}]
+        last_message: "null"
 
     messageId:
       description: message id
@@ -712,7 +711,7 @@ components:
         recipient:
           # description: Conversation Id of the recipient conversation
           $ref: "#/components/schemas/conversationId"
-        forwardedSource:
+        forwarded_source:
           # description: If forwarded, the message id who has been forwarded
           $ref: "#/components/schemas/messageId"
         timestamp:
@@ -726,10 +725,10 @@ components:
           minItems: 0
       example:
         text: "Ciao"
-        photo: null
+        photo: "null"
         author: 1
         recipient: 1
-        forwardedSource: null
+        forwardedSource: "null"
         timestamp: "2024-12-26T14:16:10Z"
         reactions: []
 

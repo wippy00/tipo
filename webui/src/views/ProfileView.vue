@@ -154,7 +154,7 @@ export default {
         <label class="form-label">Edit photo:</label>
         <form @submit.prevent="editPhoto" class="input-group mb-3">
             <input v-on:change="photo_inputHandler" id="photo_input" type="file"  accept="image/*" class="form-control" placeholder="Type a message"
-                aria-label="Type a message" aria-describedby="photo_input">
+                aria-label="select profile photo" aria-describedby="photo_input">
             <button class="btn btn-primary" type="submit" id="photo_input">Edit</button>
         </form>
 

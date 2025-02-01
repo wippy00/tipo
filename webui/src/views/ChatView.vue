@@ -69,9 +69,7 @@ export default {
                     }
                 })
                 this.conversations = response.data
-                console.log('Conversations:', this.conversations)
-                // console.log(this.conversations)
-                // return conversations
+
             } catch (e) {
                 this.error = e.toString()
             }
@@ -101,7 +99,6 @@ export default {
             this.error = null
 
             let auth_id = sessionStorage.getItem('id')
-            console.log(this.message_input)
 
             try {
                 let response = await this.$axios.post("/conversations/"+this.$route.params.id+"/messages", {
@@ -111,7 +108,7 @@ export default {
                         authorization: auth_id
                     }
                 })
-                console.log(response)
+
                 this.messages.push(response.data)
                 this.refresh()
 

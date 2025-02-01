@@ -74,7 +74,7 @@ func (rt *_router) getConversationOfUser(w http.ResponseWriter, r *http.Request,
 	w.Header().Set("content-type", "application/json")
 	conversationsJSON, err := json.Marshal(conversations)
 
-	println(string(conversationsJSON))
+	// println(string(conversationsJSON))
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -311,6 +311,8 @@ func (rt *_router) createConversation(w http.ResponseWriter, r *http.Request, ps
 		http.Error(w, "conversation type not valid "+err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	println("conversation.Cnv_type API:" + conversationRequest.Cnv_type)
 
 	newConversation, err := rt.db.CreateConversation(auth_id, database.Conversation{
 		Name:         conversationRequest.Name,
