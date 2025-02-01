@@ -175,7 +175,7 @@ export default {
 
         <h1 v-if="loading">Loading...</h1>
         <div class="row">
-
+            <!-- search friends -->
             <div class="col-10">
                 <label for="search" class="form-label fw-bold">Search Friends</label>
                 <div class="input-group">
@@ -187,7 +187,6 @@ export default {
                     <input v-model="search" type="text" class="form-control" placeholder="For all users type ':all'" aria-label="Search" aria-describedby="Search-field">
                 </div>
             </div>
-
             <div class="col-2">
                 <label for="search" class="form-label fw-bold ">Create Group</label>
                 <div>
@@ -195,7 +194,14 @@ export default {
                 </div>
             </div>
 
-            <div v-if="showCreateGroup" class="col-8 border p-3 rounded-3 mt-3 mx-auto">
+            <ul class="col-3 list-group mt-3">
+                <li v-for="(item, index) in filteredUsers" :key="index"  class="list-group-item text-capitalize">  
+                    {{ item.name }}
+                    <button @click="startNewChat(item.id)" class="btn btn-primary float-end">Chat</button>
+                </li>
+           </ul>
+
+            <div v-if="showCreateGroup" class="col-12 border p-3 rounded-3 mt-3 mx-auto">
                 <h1 class="text-center">Create new group</h1>
                 <form @submit.prevent="startNewGroup">
                     
@@ -227,12 +233,7 @@ export default {
             </div>
         </div>
 
-        <ul class="col-3 list-group mt-3 z-1">
-            <li v-for="(item, index) in filteredUsers" :key="index"  class="list-group-item text-capitalize">  
-                {{ item.name }}
-                <button @click="startNewChat(item.id)" class="btn btn-primary float-end">Chat</button>
-            </li>
-        </ul>
+        
 
 
         <!-- conversation list section -->

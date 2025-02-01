@@ -1,5 +1,11 @@
 <script>
+// import ErrorMsg from '@/components/ErrorMsg.vue'
+import ChatHeader from '@/components/ChatHeader.vue';
+
 export default {
+    components: {
+        ChatHeader
+    },
 	data: function () {
 		return {
 			error: null,
@@ -10,7 +16,8 @@ export default {
             auth_photo: null,
 
             messages: [],
-            conversations: null,
+            conversations: [],
+            partecipants: {},
 
             message_input: "",
             photo_input: null,
@@ -21,8 +28,12 @@ export default {
         
 	},
 	methods: {
+        async fetchAll(conversations_id) {
+            await this.fetchConversations(conversations_id);
+            await this.fetchMessages(conversations_id);
+        },
 		async refresh() {
-			this.errormsg = null;
+			// this.errormsg = null;
 			
             this.auth_id = sessionStorage.getItem('id');
             // await this.fetchConversations(this.$route.params.id);
@@ -33,7 +44,7 @@ export default {
             // });
 		},
         async fetchMessages(conversations_id) {
-            this.error = null
+            // this.error = null
 
 			let auth_id = sessionStorage.getItem('id')
 
@@ -58,7 +69,7 @@ export default {
             }
         },
         async fetchConversations(conversations_id) {
-            this.error = null
+            // this.error = null
 
 			let auth_id = sessionStorage.getItem('id')
 
@@ -70,26 +81,26 @@ export default {
                 })
                 this.conversations = response.data
 
+                // get all partecipants
+                for (let j = 0; j < this.conversations.participants.length; j++) {
+                    this.partecipants[this.conversations.participants[j].id] = this.conversations.participants[j]
+                }
+                // console.log(this.partecipants)
+
             } catch (e) {
                 this.error = e.toString()
             }
         },
-        async fetchUser(user_id) {
-            this.error = null
-
-			let auth_id = sessionStorage.getItem('id')
+        fetchUser(user_id) {
+            // this.error = null
 
             try {
-                let response = await this.$axios.get("/users/"+user_id, {
-                    headers: {
-                        authorization: auth_id
-                    }
-                })
-                return response.data
+                return this.partecipants[user_id]
             } catch (e) {
                 this.error = e.toString()
             }
         },
+
         async sendMessage(event) {
             event.preventDefault()
             if (this.message_input === "") {
@@ -109,7 +120,7 @@ export default {
                     }
                 })
 
-                this.messages.push(response.data)
+                this.messages = response.data
                 this.refresh()
 
             } catch (e) {
@@ -120,6 +131,7 @@ export default {
                 this.scrollToBottom();
             });
         },
+        
         scrollToBottom() {
             window.scrollTo(0, document.body.scrollHeight);
         }
@@ -132,9 +144,11 @@ export default {
         
         this.auth_id = sessionStorage.getItem('id');
 
-        await this.fetchMessages(this.$route.params.id)
+        await this.fetchAll(this.$route.params.id)
 
-        await this.fetchConversations(this.$route.params.id);
+        // await this.fetchMessages(this.$route.params.id)
+
+        // await this.fetchConversations(this.$route.params.id);
         
         this.$nextTick(() => {
             this.scrollToBottom();
@@ -151,18 +165,15 @@ export default {
 </script>
 
 <template>
+
+    <!-- <ErrorMsg v-if="error" :msg="error"></ErrorMsg> -->
+
+    
     <div class="container">
-        <!-- <div class="card p-2 bg-body-tertiary col-12">
-            <div class="d-flex">
-                <img v-if="conversations.photo" :src="'data:image/jpeg;base64,' + conversations.photo" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
-                <img v-else :src="'https://placehold.co/100x100/orange/white?text=' + conversations.name" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
-                <h1 class="ms-2 text-capitalize"> {{ conversations.name }}</h1>
-            </div>
-            <ul class="list-inline mt-2 ms-2">
-                <li class="list-inline-item text-capitalize" v-for="user in conversations.participants">{{ user.name  + " -" }}</li>
-                <li class="list-inline-item">...</li>
-            </ul>
-        </div> -->
+        
+        <!-- <ConversationHeader :conversations="conversations" :auth_id="auth_id" /> -->
+        <ChatHeader :conversations="conversations" :auth_id="auth_id" />
+
         <div v-for="message in messages">
             <!-- Se sono io -->
             <div v-if="message.author.id == auth_id" class="card my-4 bg-body-tertiary offset-md-7 col-5">

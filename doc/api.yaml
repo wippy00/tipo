@@ -258,7 +258,7 @@ paths:
         "404":
           $ref: "#/components/responses/404_NotFound"
 
-  /conversation/{conversation_id}/name:
+  /conversations/{conversation_id}/name:
     put:
       tags: ["conversation"]
       security:
@@ -294,7 +294,7 @@ paths:
         "404":
           $ref: "#/components/responses/404_NotFound"
 
-  /conversation/{conversation_id}/photo:
+  /conversations/{conversation_id}/photo:
     put:
       tags: ["conversation"]
       security:
