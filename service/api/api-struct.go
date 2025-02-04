@@ -76,36 +76,43 @@ func DbConversation(conversation Conversation) database.Conversation {
 }
 
 type Message struct {
-	Id               int64     `json:"id"`
-	Text             string    `json:"text"`
-	Photo            []byte    `json:"photo"`
-	Author           int64     `json:"author"`
-	Recipient        int64     `json:"recipient"`
-	Forwarded_source int64     `json:"forwarded_source"`
-	Timestamp        time.Time `json:"timestamp"`
-	// reaction  Reaction
+	Id        int64       `json:"id"`
+	Text      string      `json:"text"`
+	Photo     []byte      `json:"photo"`
+	Author    int64       `json:"author"`
+	Recipient int64       `json:"recipient"`
+	Forward   int64       `json:"forward"`
+	Reply     int64       `json:"reply"`
+	Timestamp time.Time   `json:"timestamp"`
+	Reactions []reactions `json:"reactions"`
 }
 
 func NewMessage(message database.Message) Message {
 	return Message{
-		Id:               message.Id,
-		Text:             message.Text,
-		Photo:            message.Photo,
-		Author:           message.Author,
-		Recipient:        message.Recipient,
-		Forwarded_source: message.Forwarded_source,
-		Timestamp:        message.Timestamp,
+		Id:        message.Id,
+		Text:      message.Text,
+		Photo:     message.Photo,
+		Author:    message.Author,
+		Recipient: message.Recipient,
+		Forward:   message.Forward,
+		Timestamp: message.Timestamp,
 	}
 }
 
 func DbMessage(message Message) database.Message {
 	return database.Message{
-		Id:               message.Id,
-		Text:             message.Text,
-		Photo:            message.Photo,
-		Author:           message.Author,
-		Recipient:        message.Recipient,
-		Forwarded_source: message.Forwarded_source,
-		Timestamp:        message.Timestamp,
+		Id:        message.Id,
+		Text:      message.Text,
+		Photo:     message.Photo,
+		Author:    message.Author,
+		Recipient: message.Recipient,
+		Forward:   message.Forward,
+		Reply:     message.Reply,
+		Timestamp: message.Timestamp,
 	}
+}
+
+type reactions struct {
+	User     int64  `json:"user"`
+	Reaction string `json:"reaction"`
 }

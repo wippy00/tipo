@@ -185,7 +185,7 @@ paths:
                     default: []
                     items:
                       $ref: "#/components/schemas/Conversation"
-                example: [{"id": 1,"name": "I salamini il ritorno 2","photo": "null","cnv_type": "group","participants": [{"id": 1,"name": "mariOne","photo": "null"},{"id": 2,"name": "rino","photo": "null"},{"id": 3,"name": "gianna","photo": "null"},{"id": 4,"name": "franco","photo": "null"},{"id": 5,"name": "cristina","photo": "null"}],"last_message": {"id": 17,"text": "Niente de che","photo": "null","author": 2,"recipient": 1,"forwarded_source": 0,"timestamp": "2025-01-23T16:35:29Z"}}]
+                example: [{"id": 1,"name": "I salamini il ritorno 2","photo": "null","cnv_type": "group","participants": [{"id": 1,"name": "mariOne","photo": "null"},{"id": 2,"name": "rino","photo": "null"},{"id": 3,"name": "gianna","photo": "null"},{"id": 4,"name": "franco","photo": "null"},{"id": 5,"name": "cristina","photo": "null"}],"last_message": {"id": 17,"text": "Niente de che","photo": "null","author": 2,"recipient": 1,"forward": 0,"timestamp": "2025-01-23T16:35:29Z"}}]
 
         "401":
           $ref: "#/components/responses/401_Unauthorized"
@@ -200,7 +200,7 @@ paths:
         description: Conversation details
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
               type: object
               properties:
@@ -252,7 +252,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Conversation"
-              example: {"id": 2,"name": "Rino - Gianna","photo": "null","cnv_type": "chat","participants": [{"id": 2,"name": "rino","photo": "null"},{"id": 3,"name": "gianna","photo": "null"}],"last_message": {"id": 4,"text": "Dove vai?","photo": "null","author": 3,"recipient": 2,"forwarded_source": 0,"timestamp": "2025-01-22T17:23:18Z"}}
+              example: {"id": 2,"name": "Rino - Gianna","photo": "null","cnv_type": "chat","participants": [{"id": 2,"name": "rino","photo": "null"},{"id": 3,"name": "gianna","photo": "null"}],"last_message": {"id": 4,"text": "Dove vai?","photo": "null","author": 3,"recipient": 2,"forward": 0,"timestamp": "2025-01-22T17:23:18Z"}}
         "401":
           $ref: "#/components/responses/401_Unauthorized"
         "404":
@@ -413,7 +413,7 @@ paths:
                 default: []
                 items:
                   $ref: "#/components/schemas/Message"
-                example: [{"id": 3,"text": "Brella","photo": "null","author": 2,"recipient": 2,"forwarded_source": 0,"timestamp": "2025-01-22T17:22:15Z"},{"id": 4,"text": "Ma dove vai?","photo": "null","author": 3,"recipient": 2,"forwarded_source": 0,"timestamp": "2025-01-22T17:23:18Z"}]
+                example: [{"id": 3,"text": "Brella","photo": "null","author": 2,"recipient": 2,"forward": 0,"timestamp": "2025-01-22T17:22:15Z"},{"id": 4,"text": "Ma dove vai?","photo": "null","author": 3,"recipient": 2,"forward": 0,"timestamp": "2025-01-22T17:23:18Z"}]
         "404":
           $ref: "#/components/responses/404_NotFound"
     post:
@@ -427,9 +427,18 @@ paths:
         description: Message details
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: "#/components/schemas/Message"
+              type: object
+              properties:
+                text:
+                  $ref: "#/components/schemas/messageText"
+                photo:
+                  $ref: "#/components/schemas/messagePhoto"
+                recipient:
+                  $ref: "#/components/schemas/conversationId"
+                reply:
+                  $ref: "#/components/schemas/messageId"
 
       responses:
         "204":
@@ -491,18 +500,6 @@ paths:
           schema:
             $ref: "#/components/schemas/conversationId"
             # description: The id of the conversation of the message
-      requestBody:
-        description: Message details
-        required: true
-        content:
-          application/json:
-            schema:
-              description: Forward details
-              type: object
-              properties:
-                conversation_id_forward:
-                  $ref: "#/components/schemas/conversationId"
-                  # description: The id of the conversation to forward the message
       responses:
         "204":
           $ref: "#/components/responses/204_NoContent"
@@ -711,8 +708,11 @@ components:
         recipient:
           # description: Conversation Id of the recipient conversation
           $ref: "#/components/schemas/conversationId"
-        forwarded_source:
-          # description: If forwarded, the message id who has been forwarded
+        forward:
+          # description: If forwarded, the user id of the original author
+          $ref: "#/components/schemas/userId"
+        reply:
+          # description: If reply, the message id of the replyed message
           $ref: "#/components/schemas/messageId"
         timestamp:
           $ref: "#/components/schemas/messageTimestamp"
@@ -728,7 +728,8 @@ components:
         photo: "null"
         author: 1
         recipient: 1
-        forwardedSource: "null"
+        forward: 0
+        reply: 0
         timestamp: "2024-12-26T14:16:10Z"
         reactions: []
 

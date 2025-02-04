@@ -18,17 +18,18 @@ type Conversation struct {
 }
 
 type Message struct {
-	Id               int64     `json:"id"`
-	Text             string    `json:"text"`
-	Photo            []byte    `json:"photo"`
-	Author           int64     `json:"author"`
-	Recipient        int64     `json:"recipient"`
-	Forwarded_source int64     `json:"forwarded_source"`
-	Timestamp        time.Time `json:"timestamp"`
-	// reaction  Reaction
+	Id        int64      `json:"id"`
+	Text      string     `json:"text"`
+	Photo     []byte     `json:"photo"`
+	Author    int64      `json:"author"`
+	Recipient int64      `json:"recipient"`
+	Forward   int64      `json:"forward"`
+	Reply     int64      `json:"reply"`
+	Timestamp time.Time  `json:"timestamp"`
+	Reactions []Reaction `json:"reactions"`
 }
 
-// type Reaction struct {
-// 	user     User
-// 	reaction string
-// }
+type Reaction struct {
+	User     int64  `json:"user"`
+	Reaction string `json:"reaction"`
+}

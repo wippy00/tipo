@@ -87,7 +87,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 	err := db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='users';`).Scan(&tableName)
 	if errors.Is(err, sql.ErrNoRows) {
 		// ############################################################
-		// ###						user							###
+		// ###						users							###
 		// ############################################################
 		user_table := `CREATE TABLE IF NOT EXISTS users (
 			id INTEGER NOT NULL PRIMARY KEY, 
@@ -118,8 +118,8 @@ func New(db *sql.DB) (AppDatabase, error) {
 			id_conversations INTEGER NOT NULL, 
 			id_user INTEGER NOT NULL,
 	
-			FOREIGN KEY (id_conversations) REFERENCES conversations(id),
-			FOREIGN KEY (id_user) REFERENCES users(id)
+			FOREIGN KEY (id_conversations) REFERENCES conversations(id) ON DELETE CASCADE,
+			FOREIGN KEY (id_user) REFERENCES users(id) ON DELETE CASCADE
 		);`
 		_, err = db.Exec(conversations_members_table)
 		if err != nil {
@@ -134,12 +134,14 @@ func New(db *sql.DB) (AppDatabase, error) {
 			photo BLOB,
 			author INT NOT NULL,
 			recipient INT NOT NULL,
-			forwarded_source INT,
+			forward INT,
+			reply INT,
 			timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			
-			FOREIGN KEY (author) REFERENCES users(id),
-			FOREIGN KEY (recipient) REFERENCES conversations(id),
-			FOREIGN KEY (forwarded_source) REFERENCES messages(id)
+			FOREIGN KEY (author) REFERENCES users(id) ON DELETE CASCADE,
+			FOREIGN KEY (recipient) REFERENCES conversations(id) ON DELETE CASCADE,
+			FOREIGN KEY (forward) REFERENCES users(id) ON DELETE CASCADE,
+			FOREIGN KEY (reply) REFERENCES messages(id) ON DELETE CASCADE
 		);`
 		_, err = db.Exec(messages_table)
 		if err != nil {
@@ -152,8 +154,8 @@ func New(db *sql.DB) (AppDatabase, error) {
 			id_user INTEGER NOT NULL,
 			id_message INTEGER NOT NULL,
 			
-			FOREIGN KEY (id_user) REFERENCES users(id),
-			FOREIGN KEY (id_message) REFERENCES messages(id)
+			FOREIGN KEY (id_user) REFERENCES users(id) ON DELETE CASCADE,
+			FOREIGN KEY (id_message) REFERENCES messages(id) ON DELETE CASCADE
 		);`
 		_, err = db.Exec(messages_readers_table)
 		if err != nil {
@@ -167,8 +169,8 @@ func New(db *sql.DB) (AppDatabase, error) {
 			id_message INTEGER NOT NULL,
 			reaction VARCHAR(3) NOT NULL,
 			
-			FOREIGN KEY (id_user) REFERENCES users(id),
-			FOREIGN KEY (id_message) REFERENCES messages(id)
+			FOREIGN KEY (id_user) REFERENCES users(id) ON DELETE CASCADE,
+			FOREIGN KEY (id_message) REFERENCES messages(id) ON DELETE CASCADE
 		);`
 		_, err = db.Exec(reactions_table)
 		if err != nil {

@@ -465,8 +465,6 @@ func (db *appdbimpl) RemoveUserFromConversation(id_conversation int64, id_auth i
 
 func (db *appdbimpl) CreateConversation(id_auth int64, conversation Conversation) (Conversation, error) {
 
-	println("conversation.Cnv_type DB:" + conversation.Cnv_type)
-
 	// Check if conversation type is correct
 	if !(conversation.Cnv_type == "chat" || conversation.Cnv_type == "group") {
 		return Conversation{}, fmt.Errorf("conversation type not valid")

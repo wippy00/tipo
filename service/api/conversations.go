@@ -306,13 +306,35 @@ func (rt *_router) createConversation(w http.ResponseWriter, r *http.Request, ps
 		return
 	}
 
-	err = json.NewDecoder(r.Body).Decode(&conversationRequest)
-	if err != nil && err.Error() == "conversation type not valid" {
-		http.Error(w, "conversation type not valid "+err.Error(), http.StatusBadRequest)
-		return
+	conversationRequest.Name = r.FormValue("name")
+
+	conversationRequest.Cnv_type = r.FormValue("cnv_type")
+
+	photo_multipart, handler, err := r.FormFile("photo")
+	if err != nil {
+		if err == http.ErrMissingFile {
+			// Il campo photo è facoltativo, quindi possiamo ignorare l'errore
+			conversationRequest.Photo = nil
+		} else {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	} else {
+		photo, err := validateFile(photo_multipart, handler, err)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		conversationRequest.Photo = photo
 	}
 
-	println("conversation.Cnv_type API:" + conversationRequest.Cnv_type)
+	// Get the participants
+	participants := r.FormValue("participants")
+	err = json.Unmarshal([]byte(participants), &conversationRequest.Participants)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	newConversation, err := rt.db.CreateConversation(auth_id, database.Conversation{
 		Name:         conversationRequest.Name,

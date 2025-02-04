@@ -47,11 +47,13 @@ func (rt *_router) getMessagesOfConversation(w http.ResponseWriter, r *http.Requ
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	_, _ = w.Write(messageJSON)
 
 }
 
 func (rt *_router) sendMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	var messageResp Message
 
 	auth_id, hasAut, err := checkAuth(r, rt)
 	if err != nil {
@@ -64,6 +66,39 @@ func (rt *_router) sendMessage(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
+	messageResp.Text = r.FormValue("text")
+
+	photo_multipart, handler, err := r.FormFile("photo")
+	if err != nil {
+		if err == http.ErrMissingFile {
+			// Il campo photo è facoltativo, quindi possiamo ignorare l'errore
+			messageResp.Photo = nil
+		} else {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	} else {
+		photo, err := validateFile(photo_multipart, handler, err)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		messageResp.Photo = photo
+	}
+
+	// println("reply: " + r.FormValue("reply"))
+
+	if r.FormValue("reply") == "" {
+		messageResp.Reply = 0
+	} else {
+		reply, err := strconv.ParseInt(r.FormValue("reply"), 10, 64)
+		if err != nil {
+			http.Error(w, "reply: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		messageResp.Reply = reply
+	}
+
 	var string_conversation_id string = ps.ByName("conversation_id")
 	conversation_id, err := strconv.ParseInt(string_conversation_id, 10, 64)
 	if err != nil {
@@ -71,14 +106,7 @@ func (rt *_router) sendMessage(w http.ResponseWriter, r *http.Request, ps httpro
 		return
 	}
 
-	var respMessage Message
-
-	if err := json.NewDecoder(r.Body).Decode(&respMessage); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	message, err := rt.db.SendMessage(conversation_id, auth_id, DbMessage(respMessage))
+	message, err := rt.db.SendMessage(conversation_id, auth_id, DbMessage(messageResp))
 	if err != nil && err.Error() == "no conversation found" {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
@@ -87,6 +115,19 @@ func (rt *_router) sendMessage(w http.ResponseWriter, r *http.Request, ps httpro
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
+	if err != nil && err.Error() == "message not found" {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err != nil && err.Error() == "message is not in the conversation" {
+		http.Error(w, "reply "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err != nil && err.Error() == "no conversation found" {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

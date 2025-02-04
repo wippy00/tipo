@@ -1,5 +1,13 @@
 <script>
+import ConversationUserPhoto from '@/components/ConversationUserPhoto.vue'
+import ConversationCard from '@/components/ConversationCard.vue'
+
 export default {
+    components: {
+        ConversationUserPhoto,
+        ConversationCard
+
+    },
 	data: function () {
 		return {
 			error: null,
@@ -108,14 +116,16 @@ export default {
 
             this.auth_id = sessionStorage.getItem('id')
             try {
-                let response = await this.$axios.post("/conversations", {
-                    name: "",
-                    photo: null,
-                    cnv_type: "chat",
-                    participants: [parseInt(user_id)],
-                }, 
+                var formData = new FormData();
+                formData.append('name', this.group_name);
+                formData.append('photo', this.group_photo);
+                formData.append('cnv_type', "chat");
+                formData.append('participants', JSON.stringify([user_id]));
+
+                let response = await this.$axios.post("/conversations", formData,
                 {
                     headers: {
+                        'Content-Type': 'multipart/form-data',
                         authorization: this.auth_id
                     }
                 })
@@ -127,14 +137,15 @@ export default {
         async startNewGroup(event) {
             event.preventDefault()
             this.error = null
+            
+            this.auth_id = sessionStorage.getItem('id')
 
             var formData = new FormData();
             formData.append('name', this.group_name);
             formData.append('photo', this.group_photo);
-            formData.append('cnv_type', JSON.stringify("group"));
+            formData.append('cnv_type', "group");
             formData.append('participants', JSON.stringify(this.checked_users));
             
-            this.auth_id = sessionStorage.getItem('id')
             try {
                 let response = await this.$axios.post("/conversations", formData,{
                     headers: {
@@ -175,6 +186,7 @@ export default {
 
         <h1 v-if="loading">Loading...</h1>
         <div class="row">
+
             <!-- search friends -->
             <div class="col-10">
                 <label for="search" class="form-label fw-bold">Search Friends</label>
@@ -200,7 +212,7 @@ export default {
                     <button @click="startNewChat(item.id)" class="btn btn-primary float-end">Chat</button>
                 </li>
            </ul>
-
+           <!-- create group -->
             <div v-if="showCreateGroup" class="col-12 border p-3 rounded-3 mt-3 mx-auto">
                 <h1 class="text-center">Create new group</h1>
                 <form @submit.prevent="startNewGroup">
@@ -239,64 +251,62 @@ export default {
         <!-- conversation list section -->
         <div v-for="(item, index) in conversations" :key="index" class="row card my-4">
             
-            <div v-if="item.cnv_type == 'group'" class="row g-0">
+            <ConversationCard v-if="item.cnv_type == 'group'">
 
-                <div class="col-md-1 col-2">
+                <template v-slot:conversationImage>
                     <img v-if="item.photo" :src="'data:image/jpeg;base64,' + item.photo" width="100" height="100" class="rounded-1"  style="object-fit: cover;">
                     <img v-else :src="'https://placehold.co/100x100/orange/white?text=' + item.name" width="100" height="100" class="rounded-1" style="object-fit: cover;">
-                </div>
+                </template>
 
-                <div class="col-md-11 col-10">
-                    <div class="card-body">
-                        <RouterLink :to="'/conversations/' + item.id">
-                            <h5 class="card-title text-capitalize">{{ item.name }}</h5>
-						</RouterLink>
+                <template v-slot:conversationName>
+                    <RouterLink :to="'/conversations/' + item.id">
+                        <h5 class="card-title text-capitalize">{{ item.name }}</h5>
+                    </RouterLink>
+                </template>
 
-                        <div v-if="item.last_message.id != 0" class="d-flex justify-content-between">
-                            <p class="card-text text-capitalize mb-0">{{ item.last_message.author.name + ": " }}<small class="text-body-secondary">{{ item.last_message.text }}</small></p>
-                            <small class="text-body-secondary">{{ item.last_message.timestamp }}</small>
-                        </div>
-
-                    </div>
-                </div>
-
-            </div>
-
-            <div v-if="item.cnv_type == 'chat'" class="row g-0">
-
-                <div class="col-md-1 col-2">
-                    <img v-if="item.participants[0].photo && item.participants[0].id != auth_id" :src="'data:image/jpeg;base64,' + item.participants[0].photo" width="100" height="100" class="rounded-1" style="object-fit: cover;">
-                    <img v-if="!item.participants[0].photo && item.participants[0].id != auth_id" :src="'https://placehold.co/100x100/orange/white?text=' + item.participants[0].name" width="100" height="100" class="rounded-1" style="object-fit: cover;">
-                    <img v-if="item.participants[1].photo && item.participants[1].id != auth_id" :src="'data:image/jpeg;base64,' + item.participants[1].photo" width="100" height="100" class="rounded-1" style="object-fit: cover;">
-                    <img v-if="!item.participants[1].photo && item.participants[1].id != auth_id" :src="'https://placehold.co/100x100/orange/white?text=' + item.participants[1].name" width="100" height="100" class="rounded-1" style="object-fit: cover;">
-                </div>
-
-                <div class="col-md-11 col-10">
-                    <div class="card-body">
-                        <RouterLink :to="'/conversations/' + item.id">
-                            <h5 v-if="item.participants[0].id != auth_id" class="card-title text-capitalize">{{ item.participants[0].name }}</h5>
-                            <h5 v-if="item.participants[1].id != auth_id" class="card-title text-capitalize">{{ item.participants[1].name }}</h5>
-                        </RouterLink>
-
-                        <div v-if="item.last_message.id != 0" class="d-flex justify-content-between">
+                <template v-if="item.last_message.id != 0" v-slot:conversationMessage>
+                    <p v-if="item.last_message.text != null" class="card-text text-capitalize mb-0">
+                        {{ item.last_message.author.name + ": " }}
+                        <small class="text-body-secondary">{{ item.last_message.text }}</small> 
+                        <small v-if="item.last_message.photo != null"> 🖼️</small>
+                    </p>
+                    <p v-if="item.last_message.text == null" class="card-text text-capitalize mb-0">
+                        {{ item.last_message.author.name + ": " }}
+                        <small v-if="item.last_message.photo != null">🖼️</small>
+                    </p>
                             
-                            <p v-if="item.last_message.text != null" class="card-text text-capitalize mb-0">
-                                {{ item.last_message.author.name + ": " }}
-                                <small class="text-body-secondary">{{ item.last_message.text }}</small> 
-                                <small v-if="item.last_message.photo != null"> 🖼️</small>
-                            </p>
-                            <p v-if="item.last_message.text == null" class="card-text text-capitalize mb-0">
-                                {{ item.last_message.author.name + ": " }}
-                                <small v-if="item.last_message.photo != null">🖼️</small>
-                            </p>
-                            
-                            <small class="text-body-secondary">{{ item.last_message.timestamp }}</small>
-                        </div>
-                    
-                    </div>
-                </div>
+                    <small class="text-body-secondary">{{ item.last_message.timestamp }}</small>
+                </template>
+            </ConversationCard>
 
-            </div>
+            <ConversationCard v-if="item.cnv_type == 'chat'">
+
+                <template v-slot:conversationImage>
+                    <ConversationUserPhoto :item="item" :auth_id="auth_id" width="100" height="100"/>
+                </template>
+
+                <template v-slot:conversationName>
+                    <RouterLink :to="'/conversations/' + item.id">
+                        <h5 v-if="item.participants[0].id != auth_id" class="card-title text-capitalize">{{ item.participants[0].name }}</h5>
+                        <h5 v-if="item. participants[1].id != auth_id" class="card-title text-capitalize">{{ item.participants[1].name }}</h5>
+                    </RouterLink>
+                </template>
+
+                <template v-if="item.last_message.id != 0" v-slot:conversationMessage>
+                    <p v-if="item.last_message.text != null" class="card-text text-capitalize mb-0">
+                        {{ item.last_message.author.name + ": " }}
+                        <small class="text-body-secondary">{{ item.last_message.text }}</small> 
+                        <small v-if="item.last_message.photo != null"> 🖼️</small>
+                    </p>
+                    <p v-if="item.last_message.text == null" class="card-text text-capitalize mb-0">
+                        {{ item.last_message.author.name + ": " }}
+                        <small v-if="item.last_message.photo != null">🖼️</small>
+                    </p>
+                            
+                    <small class="text-body-secondary">{{ item.last_message.timestamp }}</small>
+                </template>
+            </ConversationCard>
+
         </div>
 	</div>
 </template>
