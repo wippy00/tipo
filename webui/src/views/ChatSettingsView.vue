@@ -290,7 +290,7 @@ export default {
                     <div class="card-body">
                         <h5 class="card-title">Participants</h5>
                         <ul class="list-group list-group-flush">
-                            <li v-for="participant in conversations.participants" class="list-group-item">
+                            <li v-for="(participants, index) in conversations.participants" :key="index" class="list-group-item">
                                 <img v-if="participant.photo" :src="'data:image/jpeg;base64,' + participant.photo" width="100" height="100" class="rounded-5"  style="object-fit: cover;">
                                 <img v-else :src="'https://placehold.co/100x100/orange/white?text=' + participant.name" width="100" height="100" class="rounded-5" style="object-fit: cover;">
                                 <span class="fs-4 fw-bold text-capitalize ms-2 ">

@@ -232,7 +232,7 @@ export default {
                     <div class="mb-3">    
                         <label for="photo" class="form-label">Participants</label>
     
-                        <div v-for="item in users" class="form-check">
+                        <div v-for="(item, index) in users" :key="index" class="form-check">
                             <input v-model="checked_users" class="form-check-input" type="checkbox" :value="item.id" :id="item.id">
                             <label class="form-check-label text-capitalize" :for="item.id"> {{ item.name }} </label>
                         </div>

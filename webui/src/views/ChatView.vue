@@ -361,7 +361,7 @@ export default {
         <ConversationHeader :conversations="conversation" :auth_id="auth_id" />
         <ChatHeader :conversations="conversation" :auth_id="auth_id" />
 
-        <div v-for="message in messages">
+        <div v-for="(message, index) in messages " :key="index">
 
 
 
@@ -438,7 +438,7 @@ export default {
 
                 <!-- sezione reactions messaggio -->
                 <div v-if="message.reactions">
-                    <span v-for="item in message.reactions" class="badge text-bg-primary m-1">
+                    <span v-for="(item, index) in message.reactions" :key="index" class="badge text-bg-primary m-1">
                         <span class="text-capitalize">{{ item.user.name }}:</span>  
                         {{ item.reaction }}
                     </span>
@@ -511,7 +511,7 @@ export default {
 
                 <!-- sezione reactions messaggio -->
                 <div v-if="message.reactions">
-                    <span v-for="item in message.reactions" class="badge text-bg-primary m-1"><span class="text-capitalize">{{ item.user.name }}:</span>  {{ item.reaction }}</span>
+                    <span v-for="(item, index) in message.reactions" :key="index" class="badge text-bg-primary m-1"><span class="text-capitalize">{{ item.user.name }}:</span>  {{ item.reaction }}</span>
                 </div>
             
             </div>
