@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 )
 
@@ -72,7 +73,7 @@ func (db *appdbimpl) GetMessage(id_message int64) (Message, error) {
 		&message.Timestamp,
 	)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return Message{}, fmt.Errorf("message not found")
 	}
 	if err != nil {
@@ -117,7 +118,7 @@ func (db *appdbimpl) GetLastMessage(id_conversation int64) (Message, error) {
 		&message.Reply,
 		&message.Timestamp,
 	)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return Message{}, nil
 	}
 	if err != nil {

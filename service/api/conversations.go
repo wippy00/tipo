@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -312,7 +313,7 @@ func (rt *_router) createConversation(w http.ResponseWriter, r *http.Request, ps
 
 	photo_multipart, handler, err := r.FormFile("photo")
 	if err != nil {
-		if err == http.ErrMissingFile {
+		if errors.Is(err, http.ErrMissingFile) {
 			// Il campo photo è facoltativo, quindi possiamo ignorare l'errore
 			conversationRequest.Photo = nil
 		} else {

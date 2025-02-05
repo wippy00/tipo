@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 )
 
@@ -10,7 +11,7 @@ func (db *appdbimpl) UserExistById(id int64) (User, bool, error) {
 
 	err := db.c.QueryRow(`SELECT id, name, photo FROM users WHERE id = $1`, id).Scan(&user.Id, &user.Name, &user.Photo)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return user, false, nil
 	}
 	if err != nil {
@@ -26,7 +27,7 @@ func (db *appdbimpl) UserExistByName(name string) (User, bool, error) {
 
 	err := db.c.QueryRow(`SELECT id, name, photo FROM users WHERE name = $1`, name).Scan(&user.Id, &user.Name, &user.Photo)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return user, false, nil
 	}
 	if err != nil {

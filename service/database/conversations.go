@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 )
 
@@ -25,7 +26,7 @@ func (db *appdbimpl) ChatConversationExist(user1 int64, user2 int64) (bool, erro
 		HAVING COUNT(DISTINCT conversations_members.id_user) = 2;
 
 	`, user1, user2).Scan(&conversation_id)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return false, nil
 	}
 	if err != nil {
