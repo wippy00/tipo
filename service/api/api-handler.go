@@ -21,9 +21,9 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.GET("/users/:id", rt.getUser)
 
 	// Conversation routes
-	rt.router.GET("/conversations/:id", rt.getConversation)
-	rt.router.PUT("/conversations/:id/name", rt.updateConversationName)
-	rt.router.PUT("/conversations/:id/photo", rt.updateConversationPhoto)
+	rt.router.GET("/conversations/:conversation_id", rt.getConversation)
+	rt.router.PUT("/conversations/:conversation_id/name", rt.updateConversationName)
+	rt.router.PUT("/conversations/:conversation_id/photo", rt.updateConversationPhoto)
 	rt.router.POST("/conversations/:conversation_id/add/:user_id", rt.addUserToConversation)
 	rt.router.DELETE("/conversations/:conversation_id/leave", rt.removeUserFromConversation)
 
@@ -31,10 +31,12 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.POST("/conversations", rt.createConversation)
 
 	// Message routes
-	rt.router.GET("/conversations/:id/messages", rt.getMessagesOfConversation)
+	rt.router.GET("/conversations/:conversation_id/messages", rt.getMessagesOfConversation)
 	rt.router.POST("/conversations/:conversation_id/messages", rt.sendMessage)
 	rt.router.POST("/conversations/:conversation_id/messages/:message_id/forward", rt.forwardMessage)
 	rt.router.DELETE("/conversations/:conversation_id/messages/:message_id", rt.deleteMessage)
+
+	rt.router.PUT("/conversations/:conversation_id/messages/:message_id/react", rt.reactMessage)
 
 	// Special routes
 	rt.router.GET("/liveness", rt.liveness)

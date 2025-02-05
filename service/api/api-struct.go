@@ -116,3 +116,10 @@ type reactions struct {
 	User     int64  `json:"user"`
 	Reaction string `json:"reaction"`
 }
+
+func DbReaction(reaction reactions) database.Reaction {
+	return database.Reaction{
+		User:     reaction.User,
+		Reaction: reaction.Reaction,
+	}
+}

@@ -31,7 +31,7 @@ func (rt *_router) getConversation(w http.ResponseWriter, r *http.Request, ps ht
 		return
 	}
 
-	var string_id string = ps.ByName("id")
+	var string_id string = ps.ByName("conversation_id")
 	id, err := strconv.Atoi(string_id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -102,7 +102,7 @@ func (rt *_router) updateConversationName(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	var string_id string = ps.ByName("id")
+	var string_id string = ps.ByName("conversation_id")
 	id, err := strconv.ParseInt(string_id, 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -147,7 +147,7 @@ func (rt *_router) updateConversationPhoto(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	var string_id string = ps.ByName("id")
+	var string_id string = ps.ByName("conversation_id")
 	id, err := strconv.ParseInt(string_id, 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func (db *appdbimpl) GetReaction(id_message int64) ([]Reaction, error) {
+func (db *appdbimpl) GetReactionOfMessage(id_message int64) ([]Reaction, error) {
 	rows, err := db.c.Query(`
 		SELECT 
 			id_user, 
@@ -75,7 +75,7 @@ func (db *appdbimpl) GetMessage(id_message int64) (Message, error) {
 		return Message{}, fmt.Errorf("database error getting message: %w", err)
 	}
 
-	message.Reactions, err = db.GetReaction(message.Id)
+	message.Reactions, err = db.GetReactionOfMessage(message.Id)
 	if err != nil {
 		return Message{}, fmt.Errorf("database error getting reactions: %w", err)
 	}
@@ -120,7 +120,7 @@ func (db *appdbimpl) GetLastMessage(id_conversation int64) (Message, error) {
 		return Message{}, fmt.Errorf("error getting last message: %w", err)
 	}
 
-	message.Reactions, err = db.GetReaction(message.Id)
+	message.Reactions, err = db.GetReactionOfMessage(message.Id)
 	if err != nil {
 		return Message{}, fmt.Errorf("database error getting reactions: %w", err)
 	}
@@ -133,16 +133,16 @@ func (db *appdbimpl) IsMessageInConversation(id_conversation int64, id_message i
 
 	err := db.c.QueryRow(`
 	SELECT
-		COUNT(*)
+	COUNT(*)
 	FROM
-		messages
+	messages
 	WHERE
-		recipient = $1
+	recipient = $1
 	AND
-		id = $2;
-		`, id_conversation, id_message).Scan(&count)
+	id = $2;
+	`, id_conversation, id_message).Scan(&count)
 	if err != nil {
-		return false, fmt.Errorf("database error checking if message is in conversation: %w", err)
+		return false, err
 	}
 
 	if count == 0 {
@@ -151,6 +151,28 @@ func (db *appdbimpl) IsMessageInConversation(id_conversation int64, id_message i
 		return true, nil
 	}
 
+}
+
+func (db *appdbimpl) HasReaction(id_message int64, id_user int64) (bool, error) {
+	var count int64
+	err := db.c.QueryRow(`
+		SELECT
+			COUNT(*)
+		FROM
+			reactions
+		WHERE
+			id_user = $1
+		AND
+			id_message = $2;
+		`, id_user, id_message).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	if count != 0 {
+		return true, nil
+	} else {
+		return false, nil
+	}
 }
 
 // ############################################################
@@ -216,7 +238,7 @@ func (db *appdbimpl) GetMessagesOfConversation(id_conversation int64, id_auth in
 	}
 
 	for i := 0; i < len(messages); i++ {
-		messages[i].Reactions, err = db.GetReaction(messages[i].Id)
+		messages[i].Reactions, err = db.GetReactionOfMessage(messages[i].Id)
 		if err != nil {
 			return []Message{}, fmt.Errorf("database error getting reactions: %w", err)
 		}
@@ -346,11 +368,6 @@ func (db *appdbimpl) ForwardMessage(id_message int64, id_auth int64, id_conversa
 		return Message{}, fmt.Errorf("error getting message: %w", err)
 	}
 
-	// // Check if the user is the author of the message
-	// if message.Author != id_auth {
-	// 	return Message{}, fmt.Errorf("user is not the author of the message")
-	// }
-
 	// Check if the user is in the forwoarded conversation
 	isUserInConversation, err := db.IsUserInConversation(id_conversation, id_auth)
 	if err != nil {
@@ -387,4 +404,84 @@ func (db *appdbimpl) ForwardMessage(id_message int64, id_auth int64, id_conversa
 	}
 
 	return message, nil
+}
+
+func (db *appdbimpl) ReactMessage(id_message int64, id_auth int64, reaction Reaction) error {
+
+	// Check if the message existss
+	message, err := db.GetMessage(id_message)
+	if err != nil && err.Error() == "message not found" {
+		return err
+	}
+	if err != nil {
+		return fmt.Errorf("error getting message: %w", err)
+	}
+
+	var id_conversation int64 = message.Recipient
+
+	// Check if the user is in the conversation
+	isUserInConversation, err := db.IsUserInConversation(id_conversation, id_auth)
+	if err != nil {
+		return fmt.Errorf("database error checking if user is in conversation: %w", err)
+	}
+	if !isUserInConversation {
+		return fmt.Errorf("user is not in conversation")
+	}
+
+	// Check if the user has already reacted to the message
+	hasReaction, err := db.HasReaction(id_message, id_auth)
+	if err != nil {
+		return fmt.Errorf("database error checking if user has already reacted to message: %w", err)
+	}
+
+	if hasReaction && reaction.Reaction != "" {
+		_, err = db.c.Exec(`
+		UPDATE reactions
+		SET
+			reaction = $1
+		WHERE
+			id_user = $2
+		AND
+			id_message = $3;
+
+		`, reaction.Reaction, id_auth, id_message)
+		if err != nil {
+			return fmt.Errorf("database error reacting message: %w", err)
+		}
+
+		return nil
+	}
+
+	if hasReaction && reaction.Reaction == "" {
+		_, err = db.c.Exec(`
+		DELETE FROM reactions
+		WHERE
+			id_user = $1
+		AND
+			id_message = $2;
+
+		`, id_auth, id_message)
+		if err != nil {
+			return fmt.Errorf("database error reacting message: %w", err)
+		}
+
+		return nil
+	}
+
+	if !hasReaction && reaction.Reaction == "" {
+		return nil
+	}
+
+	// React Mesasge
+	_, err = db.c.Exec(`
+	INSERT INTO reactions (
+	id_user,
+	id_message,
+	reaction
+	) VALUES ($1, $2, $3);`, id_auth, id_message, reaction.Reaction)
+	if err != nil {
+		return fmt.Errorf("database error reacting message: %w", err)
+	}
+
+	return nil
 }

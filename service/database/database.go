@@ -67,6 +67,7 @@ type AppDatabase interface {
 	SendMessage(id_conversation int64, id_auth int64, message Message) (Message, error)
 	DeleteMessage(id_message int64, id_auth int64) error
 	ForwardMessage(id_message int64, id_auth int64, id_conversation int64) (Message, error)
+	ReactMessage(id_message int64, id_auth int64, reaction Reaction) error
 
 	Ping() error
 }

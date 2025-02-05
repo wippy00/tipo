@@ -508,7 +508,7 @@ paths:
         "404":
           $ref: "#/components/responses/404_NotFound"
 
-  /conversations/{conversation_id}/message/{message_id}/react:
+  /conversations/{conversation_id}/messages/{message_id}/react:
     parameters:
       - name: conversation_id
         in: path
@@ -544,12 +544,8 @@ paths:
                   $ref: "#/components/schemas/reactionText"
 
       responses:
-        "200":
-          description: Return reacted message
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Message"
+        "204":
+          $ref: "#/components/responses/204_NoContent"
         "401":
           $ref: "#/components/responses/401_Unauthorized"
         "404":
