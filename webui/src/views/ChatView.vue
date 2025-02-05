@@ -5,11 +5,15 @@ import ChatHeader from '@/components/ChatHeader.vue';
 import ConversationCard from '@/components/ConversationCard.vue';
 import ConversationUserPhoto from '@/components/ConversationUserPhoto.vue';
 
+import MessageReactionPopup from '@/components/MessageReactionPopup.vue';
+
 export default {
     components: {
         ChatHeader,
         ConversationCard,
-        ConversationUserPhoto
+        ConversationUserPhoto,
+
+        MessageReactionPopup,
     },
 	data: function () {
 		return {
@@ -31,6 +35,9 @@ export default {
             message_reply: 0,
 
             showForwardMessage: false,
+            showMessageReactionPopup: false,
+            messageReactionPopupData: null,
+
             forward_conversation_id: null,
 
             replyMessage_data: null,
@@ -86,7 +93,9 @@ export default {
 
                     // expand reactions
                     if (messages[i].reactions)  {
-                        messages[i].reactions.user = this.getUser(messages[i].reactions.user)
+                        messages[i].reactions.forEach(item => {
+                            item.user = this.getUser(item.user)
+                        })
                     }
                     
                 }
@@ -102,7 +111,6 @@ export default {
                 });
 
                 this.messages = messages
-
 
                 // return messages
             } catch (e) {
@@ -275,6 +283,17 @@ export default {
             this.message_forward = message_id
         },
 
+        showMessageReactionPopupHandler(event) {
+            event.preventDefault()
+            console.log("showMessageReactionPopup")
+            let message_id = event.target.message_id.value
+            this.messageReactionPopupData = this.messages.find(message => message.id == message_id)
+            this.showMessageReactionPopup = true
+        },
+        closeMessageReactionPopup() {
+            this.showMessageReactionPopup = false;
+        },
+
         forwardMessage(event) {
             event.preventDefault()
             let conversation_id = event.target.forward_conversation_id.value
@@ -336,11 +355,18 @@ export default {
 
     
     <div class="container">
-        
+
+        <MessageReactionPopup v-if="showMessageReactionPopup" :message="messageReactionPopupData" @close="closeMessageReactionPopup"></MessageReactionPopup>
+
         <ConversationHeader :conversations="conversation" :auth_id="auth_id" />
         <ChatHeader :conversations="conversation" :auth_id="auth_id" />
 
         <div v-for="message in messages">
+
+
+
+
+
 
             <!-- Se sono io -->
             <div v-if="message.author.id == auth_id" class="card my-4 bg-body-tertiary offset-md-7 col-5">
@@ -382,6 +408,12 @@ export default {
                             <input type="hidden" name="message_id" :value="message.id">
                             <button class="btn btn-primary" type="submit">Forward</button>
                         </form>
+
+                        <form @submit.prevent="showMessageReactionPopupHandler" class="col">
+                            <input type="hidden" name="message_id" :value="message.id">
+                            <button class="btn btn-primary" type="submit">React</button>
+                        </form>
+
                     </div>
                 </div>
 
@@ -404,8 +436,14 @@ export default {
                 </div>
                 <small class="text-end p-2">{{ message.timestamp }}</small>
 
+                <!-- sezione reactions messaggio -->
+                <div v-if="message.reactions">
+                    <span v-for="item in message.reactions" class="badge text-bg-primary m-1">
+                        <span class="text-capitalize">{{ item.user.name }}:</span>  
+                        {{ item.reaction }}
+                    </span>
+                </div>
 
-                <span class="badge text-bg-primary">Primary</span>
 
             </div>
             
@@ -444,6 +482,11 @@ export default {
                             <input type="hidden" name="message_id" :value="message.id">
                             <button class="btn btn-primary" type="submit">Forward</button>
                         </form>
+
+                        <form @submit.prevent="showMessageReactionPopupHandler" class="col">
+                            <input type="hidden" name="message_id" :value="message.id">
+                            <button class="btn btn-primary" type="submit">React</button>
+                        </form>
                     </div>
                 </div>
 
@@ -465,6 +508,11 @@ export default {
                     <p class="card-text mt-2">{{ message.text }}</p>
                 </div>
                 <small class="text-end p-2">{{ message.timestamp }}</small>
+
+                <!-- sezione reactions messaggio -->
+                <div v-if="message.reactions">
+                    <span v-for="item in message.reactions" class="badge text-bg-primary m-1"><span class="text-capitalize">{{ item.user.name }}:</span>  {{ item.reaction }}</span>
+                </div>
             
             </div>
 

@@ -3,7 +3,7 @@ import ModalError from '@/components/ModalError.vue';
 import ModalSuccess from '@/components/ModalSuccess.vue';
 import ChatHeader from '@/components/ChatHeader.vue';
 
-export default{
+export default {
     components: {
         ChatHeader,
         ModalError,
