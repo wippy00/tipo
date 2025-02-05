@@ -259,6 +259,10 @@ func (db *appdbimpl) GetConversationsOfUser(id int64) ([]Conversation, error) {
 			)
 		}
 	}
+	err = rows.Err()
+	if err != nil {
+		return []Conversation{}, fmt.Errorf("error getting conversation row: %w", err)
+	}
 
 	conversations = make([]Conversation, 0, len(conversation_map))
 	for _, conv := range conversation_map {

@@ -32,6 +32,10 @@ func (db *appdbimpl) GetReactionOfMessage(id_message int64) ([]Reaction, error) 
 		}
 		reactions = append(reactions, reaction)
 	}
+	err = rows.Err()
+	if err != nil {
+		return []Reaction{}, fmt.Errorf("error getting conversation row: %w", err)
+	}
 
 	return reactions, nil
 
@@ -236,6 +240,10 @@ func (db *appdbimpl) GetMessagesOfConversation(id_conversation int64, id_auth in
 		}
 		messages = append(messages, message)
 	}
+	err = rows.Err()
+	if err != nil {
+		return []Message{}, fmt.Errorf("error getting conversation row: %w", err)
+	}
 
 	for i := 0; i < len(messages); i++ {
 		messages[i].Reactions, err = db.GetReactionOfMessage(messages[i].Id)
@@ -335,6 +343,10 @@ func (db *appdbimpl) DeleteMessage(id_message int64, id_auth int64) error {
 			return fmt.Errorf("database error scanning replies of message: %w", err)
 		}
 		replied_messages = append(replied_messages, id)
+	}
+	err = rows.Err()
+	if err != nil {
+		return fmt.Errorf("error getting message row: %w", err)
 	}
 
 	_, _ = db.c.Exec(`SET FOREIGN_KEY_CHECKS = 0;`)
