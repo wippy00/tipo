@@ -51,7 +51,8 @@ func (db *appdbimpl) GetUsers() ([]User, error) {
 		}
 		users = append(users, user)
 	}
-	if err := rows.Err(); err != nil {
+	err = rows.Err()
+	if err != nil {
 		return users, fmt.Errorf("error unpacking all users: %w", err)
 	}
 
