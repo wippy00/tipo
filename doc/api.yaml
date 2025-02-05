@@ -22,7 +22,7 @@ tags:
     description: Operations related to sending and managing messages
 
 paths:
-  /session:
+  /login:
     post:
       tags: ["login"]
       summary: Logs in the user
@@ -52,6 +52,10 @@ paths:
                 properties:
                   id:
                     $ref: "#/components/schemas/userId"
+                  name:
+                    $ref: "#/components/schemas/userName"
+                  photo:
+                    $ref: "#/components/schemas/userPhoto"
 
   /users:
     get:

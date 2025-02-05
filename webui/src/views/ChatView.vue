@@ -75,17 +75,20 @@ export default {
                     
 
                     // expand forwoard
-                    if (messages[i].forward == 0) {
-                        continue
+                    if (messages[i].forward != 0) {
+                        if (messages[i].forward in this.participants) {
+                            messages[i].forward = this.getUser(messages[i].forward);
+                        } 
+                        else {
+                            messages[i].forward = await this.fetchUser(messages[i].forward);
+                        }
                     }
 
-
-                    if (messages[i].forward in this.participants) {
-                        messages[i].forward = this.getUser(messages[i].forward);
-                    } 
-                    else {
-                        messages[i].forward = await this.fetchUser(messages[i].forward);
+                    // expand reactions
+                    if (messages[i].reactions)  {
+                        messages[i].reactions.user = this.getUser(messages[i].reactions.user)
                     }
+                    
                 }
 
                 var messages_dict = {}
@@ -338,6 +341,7 @@ export default {
         <ChatHeader :conversations="conversation" :auth_id="auth_id" />
 
         <div v-for="message in messages">
+
             <!-- Se sono io -->
             <div v-if="message.author.id == auth_id" class="card my-4 bg-body-tertiary offset-md-7 col-5">
                 
@@ -399,6 +403,9 @@ export default {
                     <p class="card-text mt-2">{{ message.text }}</p>
                 </div>
                 <small class="text-end p-2">{{ message.timestamp }}</small>
+
+
+                <span class="badge text-bg-primary">Primary</span>
 
             </div>
             
