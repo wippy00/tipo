@@ -37,6 +37,7 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.DELETE("/conversations/:conversation_id/messages/:message_id", rt.deleteMessage)
 
 	rt.router.PUT("/conversations/:conversation_id/messages/:message_id/react", rt.reactMessage)
+	rt.router.DELETE("/conversations/:conversation_id/messages/:message_id/react", rt.unReactMessage)
 
 	// Special routes
 	rt.router.GET("/liveness", rt.liveness)

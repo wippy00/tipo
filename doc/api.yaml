@@ -317,7 +317,7 @@ paths:
         description: Chat details
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
               type: object
               properties:
@@ -439,8 +439,6 @@ paths:
                   $ref: "#/components/schemas/messageText"
                 photo:
                   $ref: "#/components/schemas/messagePhoto"
-                recipient:
-                  $ref: "#/components/schemas/conversationId"
                 reply:
                   $ref: "#/components/schemas/messageId"
 
@@ -556,7 +554,7 @@ paths:
           $ref: "#/components/responses/404_NotFound"
 
     delete:
-      tags: ["conversation"]
+      tags: ["message"]
       security:
         - bearerAuth: []
       summary: Unreact a message

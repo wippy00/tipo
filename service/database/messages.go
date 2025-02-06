@@ -362,6 +362,19 @@ func (db *appdbimpl) DeleteMessage(id_message int64, id_auth int64) error {
 
 	_, _ = db.c.Exec(`SET FOREIGN_KEY_CHECKS = 1;`)
 
+	// Check if the message has reactions
+	hasReactions, err := db.HasReaction(id_message, id_auth)
+	if err != nil {
+		return fmt.Errorf("database error checking if message has reactions: %w", err)
+	}
+	if hasReactions {
+		_, err = db.c.Exec(`DELETE FROM reactions WHERE id_message = $1;`, id_message)
+		if err != nil {
+			return fmt.Errorf("database error deleting reactions of message: %w", err)
+		}
+	}
+
+	// Delete message
 	_, err = db.c.Exec(`DELETE FROM messages WHERE id = $1;`, id_message)
 	if err != nil {
 		return fmt.Errorf("database error deleting message: %w", err)
@@ -421,6 +434,10 @@ func (db *appdbimpl) ForwardMessage(id_message int64, id_auth int64, id_conversa
 
 func (db *appdbimpl) ReactMessage(id_message int64, id_auth int64, reaction Reaction) error {
 
+	if reaction.Reaction == "" {
+		return fmt.Errorf("empty reaction")
+	}
+
 	// Check if the message existss
 	message, err := db.GetMessage(id_message)
 	if err != nil && err.Error() == "message not found" {
@@ -465,7 +482,49 @@ func (db *appdbimpl) ReactMessage(id_message int64, id_auth int64, reaction Reac
 		return nil
 	}
 
-	if hasReaction && reaction.Reaction == "" {
+	// React Mesasge
+	_, err = db.c.Exec(`
+	INSERT INTO reactions (
+		id_user,
+		id_message,
+		reaction
+	) VALUES ($1, $2, $3);`, id_auth, id_message, reaction.Reaction)
+	if err != nil {
+		return fmt.Errorf("database error reacting message: %w", err)
+	}
+
+	return nil
+}
+
+func (db *appdbimpl) UnReactMessage(id_message int64, id_auth int64) error {
+	// Check if the message existss
+	message, err := db.GetMessage(id_message)
+	if err != nil && err.Error() == "message not found" {
+		return err
+	}
+	if err != nil {
+		return fmt.Errorf("error getting message: %w", err)
+	}
+
+	var id_conversation int64 = message.Recipient
+
+	// Check if the user is in the conversation
+	isUserInConversation, err := db.IsUserInConversation(id_conversation, id_auth)
+	if err != nil {
+		return fmt.Errorf("database error checking if user is in conversation: %w", err)
+	}
+	if !isUserInConversation {
+		return fmt.Errorf("user is not in conversation")
+	}
+
+	// Check if the user has already reacted to the message
+	hasReaction, err := db.HasReaction(id_message, id_auth)
+	if err != nil {
+		return fmt.Errorf("database error checking if user has already reacted to message: %w", err)
+	}
+
+	// Remove reaction
+	if hasReaction {
 		_, err = db.c.Exec(`
 		DELETE FROM reactions
 		WHERE
@@ -479,21 +538,6 @@ func (db *appdbimpl) ReactMessage(id_message int64, id_auth int64, reaction Reac
 		}
 
 		return nil
-	}
-
-	if !hasReaction && reaction.Reaction == "" {
-		return nil
-	}
-
-	// React Mesasge
-	_, err = db.c.Exec(`
-	INSERT INTO reactions (
-	id_user,
-	id_message,
-	reaction
-	) VALUES ($1, $2, $3);`, id_auth, id_message, reaction.Reaction)
-	if err != nil {
-		return fmt.Errorf("database error reacting message: %w", err)
 	}
 
 	return nil

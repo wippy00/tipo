@@ -33,8 +33,31 @@ export default {
             }
 
         },
+
+        async unReactMessage() {
+
+            const conversation_id = 0
+            const auth_id = sessionStorage.getItem('id')
+            const message_id = this.message.id
+
+            try {
+                let response = await this.$axios.delete("/conversations/" + conversation_id + "/messages/" + message_id + "/react", {
+                    headers: {
+                        authorization: auth_id
+                    }
+                })
+
+            } catch (e) {
+                console.error(e.toString())
+            }
+
+        },
         handleReaction(reaction) {
-            this.reactMessage(reaction)
+            if (reaction == '') {
+                this.unReactMessage()
+            }else{
+                this.reactMessage(reaction)
+            }
             this.closeModal()
         }
 

@@ -278,6 +278,10 @@ func (rt *_router) reactMessage(w http.ResponseWriter, r *http.Request, ps httpr
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
+	if err != nil && err.Error() == "empty reaction" {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -285,5 +289,36 @@ func (rt *_router) reactMessage(w http.ResponseWriter, r *http.Request, ps httpr
 
 }
 
-// func (rt *_router) unReactMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-// }
+func (rt *_router) unReactMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	auth_id, hasAut, err := checkAuth(r, rt)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	if !hasAut {
+		http.Error(w, "not authorized to forward message", http.StatusUnauthorized)
+		return
+	}
+
+	var string_message_id string = ps.ByName("message_id")
+	message_id, err := strconv.ParseInt(string_message_id, 10, 64)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = rt.db.UnReactMessage(message_id, auth_id)
+	if err != nil && err.Error() == "message not found" {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	if err != nil && err.Error() == "user is not in conversation" {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
