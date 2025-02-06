@@ -9,6 +9,3 @@ export default {
 		{{ msg }}
 	</div>
 </template>
-
-<style>
-</style>

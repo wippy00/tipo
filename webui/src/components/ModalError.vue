@@ -1,13 +1,13 @@
 <script>
 export default {
-    props:['error'],
-    
+    props: ['error'],
+
     methods: {
         closeModal() {
             this.$emit('close')
         },
-  
-  }
+
+    }
 };
 </script>
 

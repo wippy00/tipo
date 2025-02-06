@@ -2,7 +2,7 @@
 export default {
     props: ['show', 'message'],
 
-    data: function() {
+    data: function () {
         return {
             reactionsTypes: ['😂', '🗿', '😐', '👍', '❤️', '🔥', '🎉', '😢', '😡'],
         }
@@ -13,21 +13,21 @@ export default {
             this.$emit('close')
         },
 
-        async reactMessage(reaction){
+        async reactMessage(reaction) {
 
             const conversation_id = 0
             const auth_id = sessionStorage.getItem('id')
             const message_id = this.message.id
 
             try {
-                let response = await this.$axios.put("/conversations/"+conversation_id+"/messages/"+message_id+"/react", {
+                let response = await this.$axios.put("/conversations/" + conversation_id + "/messages/" + message_id + "/react", {
                     reaction: reaction
                 }, {
                     headers: {
                         authorization: auth_id
                     }
                 })
-                
+
             } catch (e) {
                 console.error(e.toString())
             }
@@ -68,16 +68,16 @@ export default {
                             <p class="card-text">{{ message.text }}</p>
 
                             <div v-if="message.reactions">
-                                <span v-for="item in message.reactions" class="badge text-bg-primary m-1"><span class="text-capitalize">{{ item.user.name }}:</span>  {{ item.reaction }}</span>
+                                <span v-for="item in message.reactions" class="badge text-bg-primary m-1"><span class="text-capitalize">{{ item.user.name }}:</span> {{ item.reaction }}</span>
                             </div>
                         </div>
                     </div>
 
                     <div class="d-flex mt-3">
                         <button v-for="reaction in reactionsTypes" @click="handleReaction(reaction)" class="btn btn-outline-light me-1">{{ reaction }}</button>
-                        
+
                     </div>
-                    
+
                     <button @click="handleReaction('')" class="btn btn-outline-light mt-2">Delete</button>
 
                 </div>

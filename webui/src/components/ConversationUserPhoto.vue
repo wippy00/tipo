@@ -1,6 +1,6 @@
 <script>
 export default {
-    props:['item', 'auth_id', 'width', 'height'],
+    props: ['item', 'auth_id', 'width', 'height'],
 }
 </script>
 

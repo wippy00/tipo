@@ -91,7 +91,7 @@ export default {
                 if (response.status === 200) {
                     const reader = new FileReader();
                     reader.onload = (e) => {
-                       // rimuove data:image/jpeg;base64,
+                        // rimuove data:image/jpeg;base64,
                         const base64String = e.target.result.split(',')[1];
                         localStorage.setItem('photo', base64String);
                     }
@@ -131,9 +131,9 @@ export default {
 
 <template>
     <div class="container">
-        
+
         <ModalError :error="error" @close="error = null" />
-        
+
         <ModalSuccess :msg="msg" @close="msg = null" />
 
         <div class="d-flex mb-5">
@@ -142,19 +142,17 @@ export default {
 
             <h1 class="text-capitalize ms-3 mt-5 pt-2"> {{ auth_name }} </h1>
         </div>
-        
+
 
         <label class="form-label">Edit name:</label>
         <form @submit.prevent="editName" class="input-group mb-3">
-            <input v-model="name_input" id="name_input" type="text" class="form-control" placeholder="Name"
-                aria-label="Name" aria-describedby="name_input">
+            <input v-model="name_input" id="name_input" type="text" class="form-control" placeholder="Name" aria-label="Name" aria-describedby="name_input">
             <button class="btn btn-primary" type="submit" id="name_input">Edit</button>
         </form>
 
         <label class="form-label">Edit photo:</label>
         <form @submit.prevent="editPhoto" class="input-group mb-3">
-            <input v-on:change="photo_inputHandler" id="photo_input" type="file"  accept="image/*" class="form-control" placeholder="Type a message"
-                aria-label="select profile photo" aria-describedby="photo_input">
+            <input v-on:change="photo_inputHandler" id="photo_input" type="file" accept="image/*" class="form-control" placeholder="Type a message" aria-label="select profile photo" aria-describedby="photo_input">
             <button class="btn btn-primary" type="submit" id="photo_input">Edit</button>
         </form>
 

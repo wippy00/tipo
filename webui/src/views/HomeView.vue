@@ -22,7 +22,7 @@ export default {
 
 			try {
 				let response = await this.$axios.post("/login", { name: this.name })
-				
+
 				sessionStorage.setItem("logged_in", true);
 				sessionStorage.setItem("id", response.data.id);
 				sessionStorage.setItem("name", response.data.name);
@@ -48,8 +48,8 @@ export default {
 	},
 	mounted() {
 		if (sessionStorage.getItem('logged_in') === "true") {
-            this.$router.push('/conversations')
-        }
+			this.$router.push('/conversations')
+		}
 
 		this.logged_in = sessionStorage.getItem('logged_in');
 		console.log(this.logged_in)
@@ -68,7 +68,7 @@ export default {
 				<form @submit.prevent="loginHandler">
 					<div class="mb-3">
 						<label for="name" class="form-label">name</label>
-						<input type="text" class="form-control" id="name" v-model="name"aria-describedby="nameHelp">
+						<input type="text" class="form-control" id="name" v-model="name" aria-describedby="nameHelp">
 					</div>
 					<button type="submit" class="btn btn-primary">Submit</button>
 				</form>
@@ -77,15 +77,8 @@ export default {
 		<div v-else>
 			<h1 class="text-center">Welcome {{ name }}</h1>
 		</div>
-		
-
-		
-
-		
 
 	</div>
 </template>
 
-<style>
-
-</style>
+<style></style>

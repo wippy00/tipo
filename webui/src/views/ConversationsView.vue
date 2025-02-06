@@ -8,14 +8,14 @@ export default {
         ConversationCard
 
     },
-	data: function () {
-		return {
-			error: null,
-			errormsg: null,
-			loading: false,
-		    
+    data: function () {
+        return {
+            error: null,
+            errormsg: null,
+            loading: false,
+
             conversations: null,
-            
+
             search: "",
             users: null,
             filteredUsers: null,
@@ -26,14 +26,14 @@ export default {
             group_name: "",
             group_photo: null,
             checked_users: []
-}           
-	},
+        }
+    },
     watch: {
-        search: function() {
+        search: function () {
             // console.log(this.search)
             if (this.search.length < 3) {
                 return this.filteredUsers = []
-                
+
             }
 
             if (this.search === ":all") {
@@ -46,12 +46,12 @@ export default {
             // console.log(this.filteredUsers)
         }
     },
-	methods: {
+    methods: {
         async fetchConversations() {
             this.loading = true
             this.error = null
 
-			this.auth_id = sessionStorage.getItem('id')
+            this.auth_id = sessionStorage.getItem('id')
 
             try {
                 let response = await this.$axios.get("/conversations", {
@@ -62,7 +62,7 @@ export default {
                 this.conversations = response.data
 
                 // console.log(this.conversations)
-                
+
                 // expand the last message author
                 for (let i = 0; i < this.conversations.length; i++) {
                     if (this.conversations[i].last_message == 0) {
@@ -70,20 +70,20 @@ export default {
                     }
 
                     for (let j = 0; j < this.conversations[i].participants.length; j++) {
-                        if (this.conversations[i].participants[j].id == this.conversations[i].last_message.author) { 
-                            this.conversations[i].last_message.author = this.conversations[i].participants[j] 
+                        if (this.conversations[i].participants[j].id == this.conversations[i].last_message.author) {
+                            this.conversations[i].last_message.author = this.conversations[i].participants[j]
                         }
-                
+
                     }
                 }
-                
+
                 // sort by last message timestamp
                 this.conversations.sort((a, b) => {
                     const dateA = a.last_message ? new Date(a.last_message.timestamp) : 0;
                     const dateB = b.last_message ? new Date(b.last_message.timestamp) : 0;
                     return dateB - dateA;
                 });
-            
+
             } catch (e) {
                 this.error = e.toString()
             }
@@ -93,7 +93,7 @@ export default {
             this.loading = true
             this.error = null
 
-			this.auth_id = sessionStorage.getItem('id')
+            this.auth_id = sessionStorage.getItem('id')
 
             try {
                 let response = await this.$axios.get("/users", {
@@ -123,12 +123,12 @@ export default {
                 formData.append('participants', JSON.stringify([user_id]));
 
                 let response = await this.$axios.post("/conversations", formData,
-                {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                        authorization: this.auth_id
-                    }
-                })
+                    {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                            authorization: this.auth_id
+                        }
+                    })
                 this.$router.push('/conversations/' + response.data.id)
             } catch (e) {
                 this.error = e.toString()
@@ -137,7 +137,7 @@ export default {
         async startNewGroup(event) {
             event.preventDefault()
             this.error = null
-            
+
             this.auth_id = sessionStorage.getItem('id')
 
             var formData = new FormData();
@@ -145,9 +145,9 @@ export default {
             formData.append('photo', this.group_photo);
             formData.append('cnv_type', "group");
             formData.append('participants', JSON.stringify(this.checked_users));
-            
+
             try {
-                let response = await this.$axios.post("/conversations", formData,{
+                let response = await this.$axios.post("/conversations", formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
                         authorization: this.auth_id
@@ -181,8 +181,8 @@ export default {
 </script>
 
 <template>
-	<div class="container">
-		<!-- <ErrorMsg v-if="error" :msg="errormsg"></ErrorMsg> -->
+    <div class="container">
+        <!-- <ErrorMsg v-if="error" :msg="errormsg"></ErrorMsg> -->
 
         <h1 v-if="loading">Loading...</h1>
         <div class="row">
@@ -193,7 +193,7 @@ export default {
                 <div class="input-group">
                     <span class="input-group-text">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
-                            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+                            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0" />
                         </svg>
                     </span>
                     <input v-model="search" type="text" class="form-control" placeholder="For all users type ':all'" aria-label="Search" aria-describedby="Search-field">
@@ -207,54 +207,53 @@ export default {
             </div>
 
             <ul class="col-3 list-group mt-3">
-                <li v-for="(item, index) in filteredUsers" :key="index"  class="list-group-item text-capitalize">  
+                <li v-for="(item, index) in filteredUsers" :key="index" class="list-group-item text-capitalize">
                     {{ item.name }}
                     <button @click="startNewChat(item.id)" class="btn btn-primary float-end">Chat</button>
                 </li>
-           </ul>
-           <!-- create group -->
+            </ul>
+            <!-- create group -->
             <div v-if="showCreateGroup" class="col-12 border p-3 rounded-3 mt-3 mx-auto">
                 <h1 class="text-center">Create new group</h1>
                 <form @submit.prevent="startNewGroup">
-                    
+
                     <div class="mb-3 row">
                         <div class="col-6">
                             <label for="group_name" class="form-label">Name</label>
                             <input v-model="group_name" type="text" class="form-control" id="group_name" placeholder="Group name" aria-describedby="group_name">
                         </div>
-                        
+
                         <div class="col-6">
                             <label for="group_photo" class="form-label">Photo</label>
-                            <input v-on:change="file_inputHandler" type="file" id="group_photo" accept="image/*" class="form-control" aria-describedby="group_photo">					
+                            <input v-on:change="file_inputHandler" type="file" id="group_photo" accept="image/*" class="form-control" aria-describedby="group_photo">
                         </div>
                     </div>
-                    
-                    <div class="mb-3">    
+
+                    <div class="mb-3">
                         <label for="photo" class="form-label">Participants</label>
-    
+
                         <div v-for="(item, index) in users" :key="index" class="form-check">
                             <input v-model="checked_users" class="form-check-input" type="checkbox" :value="item.id" :id="item.id">
                             <label class="form-check-label text-capitalize" :for="item.id"> {{ item.name }} </label>
                         </div>
 
                     </div>
-                    
-                    
-					<button type="submit" class="btn btn-primary">Submit</button>
-				</form>
+
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </form>
             </div>
         </div>
 
-        
+
 
 
         <!-- conversation list section -->
         <div v-for="(item, index) in conversations" :key="index" class="row card my-4">
-            
+
             <ConversationCard v-if="item.cnv_type == 'group'">
 
                 <template v-slot:conversationImage>
-                    <img v-if="item.photo" :src="'data:image/jpeg;base64,' + item.photo" width="100" height="100" class="rounded-1"  style="object-fit: cover;">
+                    <img v-if="item.photo" :src="'data:image/jpeg;base64,' + item.photo" width="100" height="100" class="rounded-1" style="object-fit: cover;">
                     <img v-else :src="'https://placehold.co/100x100/orange/white?text=' + item.name" width="100" height="100" class="rounded-1" style="object-fit: cover;">
                 </template>
 
@@ -267,14 +266,14 @@ export default {
                 <template v-if="item.last_message.id != 0" v-slot:conversationMessage>
                     <p v-if="item.last_message.text != null" class="card-text text-capitalize mb-0">
                         {{ item.last_message.author.name + ": " }}
-                        <small class="text-body-secondary">{{ item.last_message.text }}</small> 
+                        <small class="text-body-secondary">{{ item.last_message.text }}</small>
                         <small v-if="item.last_message.photo != null"> 🖼️</small>
                     </p>
                     <p v-if="item.last_message.text == null" class="card-text text-capitalize mb-0">
                         {{ item.last_message.author.name + ": " }}
                         <small v-if="item.last_message.photo != null">🖼️</small>
                     </p>
-                            
+
                     <small class="text-body-secondary">{{ item.last_message.timestamp }}</small>
                 </template>
             </ConversationCard>
@@ -282,33 +281,35 @@ export default {
             <ConversationCard v-if="item.cnv_type == 'chat'">
 
                 <template v-slot:conversationImage>
-                    <ConversationUserPhoto :item="item" :auth_id="auth_id" width="100" height="100"/>
+                    <ConversationUserPhoto :item="item" :auth_id="auth_id" width="100" height="100" />
                 </template>
 
                 <template v-slot:conversationName>
                     <RouterLink :to="'/conversations/' + item.id">
-                        <h5 v-if="item.participants[0].id != auth_id" class="card-title text-capitalize">{{ item.participants[0].name }}</h5>
-                        <h5 v-if="item. participants[1].id != auth_id" class="card-title text-capitalize">{{ item.participants[1].name }}</h5>
+                        <h5 v-if="item.participants[0].id != auth_id" class="card-title text-capitalize">{{
+                            item.participants[0].name }}</h5>
+                        <h5 v-if="item.participants[1].id != auth_id" class="card-title text-capitalize">{{
+                            item.participants[1].name }}</h5>
                     </RouterLink>
                 </template>
 
                 <template v-if="item.last_message.id != 0" v-slot:conversationMessage>
                     <p v-if="item.last_message.text != null" class="card-text text-capitalize mb-0">
                         {{ item.last_message.author.name + ": " }}
-                        <small class="text-body-secondary">{{ item.last_message.text }}</small> 
+                        <small class="text-body-secondary">{{ item.last_message.text }}</small>
                         <small v-if="item.last_message.photo != null"> 🖼️</small>
                     </p>
                     <p v-if="item.last_message.text == null" class="card-text text-capitalize mb-0">
                         {{ item.last_message.author.name + ": " }}
                         <small v-if="item.last_message.photo != null">🖼️</small>
                     </p>
-                            
+
                     <small class="text-body-secondary">{{ item.last_message.timestamp }}</small>
                 </template>
             </ConversationCard>
 
         </div>
-	</div>
+    </div>
 </template>
 
 <style>

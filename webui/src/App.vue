@@ -8,19 +8,19 @@ export default {
 			error: null,
 			errormsg: null,
 			loading: false,
-		    
+
 			auth_id: null,
 			auth_name: null,
 			auth_photo: null
-        }
-        
+		}
+
 	},
 	methods: {
 		async logout() {
 			sessionStorage.removeItem('id');
 			sessionStorage.removeItem('name');
 			localStorage.removeItem('photo');
-			
+
 			sessionStorage.setItem("logged_in", false);
 			this.refreshData();
 
@@ -44,19 +44,19 @@ export default {
 			<div class="container-fluid">
 				<a class="navbar-brand">Wasa Text</a>
 				<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-				<span class="navbar-toggler-icon"></span>
+					<span class="navbar-toggler-icon"></span>
 				</button>
 				<div class="collapse navbar-collapse" id="navbarNav">
 					<ul class="navbar-nav">
 						<li class="nav-item">
-						<RouterLink to="/" class="nav-link ">
-							Home
-						</RouterLink>
+							<RouterLink to="/" class="nav-link ">
+								Home
+							</RouterLink>
 						</li>
 						<li class="nav-item">
-						<RouterLink to="/profile" class="nav-link ">
-							Profile
-						</RouterLink>
+							<RouterLink to="/profile" class="nav-link ">
+								Profile
+							</RouterLink>
 						</li>
 					</ul>
 				</div>
@@ -76,9 +76,9 @@ export default {
 			<hr>
 		</nav>
 	</header>
-	
+
 	<div class="mt-5 p-3"></div>
-	
+
 	<main>
 		<RouterView @login-success="refreshData" />
 	</main>

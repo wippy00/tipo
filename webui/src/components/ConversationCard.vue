@@ -1,5 +1,3 @@
-
-
 <template>
     <div class="row g-0">
 
@@ -13,8 +11,8 @@
             <div class="card-body">
 
                 <slot name="conversationName"></slot>
-                
-                <div  class="d-flex justify-content-between">      
+
+                <div class="d-flex justify-content-between">
                     <slot name="conversationMessage"></slot>
                 </div>
 

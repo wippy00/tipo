@@ -1,13 +1,13 @@
 <script>
 export default {
-    props:['msg'],
-    
+    props: ['msg'],
+
     methods: {
         closeModal() {
             this.$emit('close')
         },
-  
-  }
+
+    }
 };
 </script>
 
