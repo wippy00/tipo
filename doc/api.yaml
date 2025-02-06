@@ -321,7 +321,7 @@ paths:
             schema:
               type: object
               properties:
-                new_photo:
+                photo:
                   $ref: "#/components/schemas/conversationPhoto"
       responses:
         "204":

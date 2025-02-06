@@ -117,8 +117,8 @@ export default {
             this.auth_id = sessionStorage.getItem('id')
             try {
                 var formData = new FormData();
-                formData.append('name', this.group_name);
-                formData.append('photo', this.group_photo);
+                // formData.append('name', this.group_name);
+                // formData.append('photo', this.group_photo);
                 formData.append('cnv_type', "chat");
                 formData.append('participants', JSON.stringify([user_id]));
 

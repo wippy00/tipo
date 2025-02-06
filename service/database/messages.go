@@ -394,8 +394,17 @@ func (db *appdbimpl) ForwardMessage(id_message int64, id_auth int64, id_conversa
 		return Message{}, fmt.Errorf("error getting message: %w", err)
 	}
 
+	// Check if the user is in the source conversation
+	isUserInConversation, err := db.IsUserInConversation(message.Recipient, id_auth)
+	if err != nil {
+		return Message{}, fmt.Errorf("database error checking if user is in conversation: %w", err)
+	}
+	if !isUserInConversation {
+		return Message{}, fmt.Errorf("user is not in conversation")
+	}
+
 	// Check if the user is in the forwoarded conversation
-	isUserInConversation, err := db.IsUserInConversation(id_conversation, id_auth)
+	isUserInConversation, err = db.IsUserInConversation(id_conversation, id_auth)
 	if err != nil {
 		return Message{}, fmt.Errorf("database error checking if user is in conversation: %w", err)
 	}

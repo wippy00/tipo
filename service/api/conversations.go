@@ -283,7 +283,7 @@ func (rt *_router) removeUserFromConversation(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusNoContent)
 }
 
 type ConversationRequest struct {
