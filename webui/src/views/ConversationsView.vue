@@ -71,11 +71,22 @@ export default {
                         continue
                     }
 
+                    let authorFound = false;
                     for (let j = 0; j < this.conversations[i].participants.length; j++) {
                         if (this.conversations[i].participants[j].id == this.conversations[i].last_message.author) {
-                            this.conversations[i].last_message.author = this.conversations[i].participants[j]
+                            this.conversations[i].last_message.author = this.conversations[i].participants[j];
+                            authorFound = true;
+                            break;
                         }
+                    }
 
+                    if (!authorFound) {
+                        for (let k = 0; k < this.users.length; k++) {
+                            if (this.users[k].id == this.conversations[i].last_message.author) {
+                                this.conversations[i].last_message.author = this.users[k];
+                                break;
+                            }
+                        }
                     }
                 }
 
