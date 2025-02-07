@@ -25,7 +25,9 @@ export default {
             showCreateGroup: false,
             group_name: "",
             group_photo: null,
-            checked_users: []
+            checked_users: [],
+
+            refreshInterval: null
         }
     },
     watch: {
@@ -48,7 +50,7 @@ export default {
     },
     methods: {
         async fetchConversations() {
-            this.loading = true
+            
             this.error = null
 
             this.auth_id = sessionStorage.getItem('id')
@@ -90,7 +92,7 @@ export default {
             this.loading = false
         },
         async fetchAllUsers() {
-            this.loading = true
+            
             this.error = null
 
             this.auth_id = sessionStorage.getItem('id')
@@ -163,7 +165,13 @@ export default {
         },
         showCreateGroupHandler() {
             this.showCreateGroup = !this.showCreateGroup
+        },
+
+        async refresh() {
+            await this.fetchConversations();
+            await this.fetchAllUsers();
         }
+
     },
     async mounted() {
         if (sessionStorage.getItem('logged_in') !== "true") {
@@ -171,11 +179,18 @@ export default {
             this.$router.push('/')
         }
 
-        // this.refresh();
-        await this.fetchConversations();
+        this.refresh();
 
-        await this.fetchAllUsers();
+        this.$nextTick(() => {
+            this.scrollToBottom();
+        });
 
+        this.refreshInterval = setInterval(() => { 
+            this.refresh();
+        }, 5000);
+    },
+    unmounted() {
+        clearInterval(this.refreshInterval)
     }
 }
 </script>

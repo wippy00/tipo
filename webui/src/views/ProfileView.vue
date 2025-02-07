@@ -46,17 +46,28 @@ export default {
                     }
                 });
 
-                if (response.status === 200) {
-                    sessionStorage.setItem('name', this.name_input);
-                    this.msg = "Name updated successfully.";
-                    this.reload();
-                } else {
-                    let json = await response.json();
-                    this.error = response.status;
-                    this.errormsg = json.message;
-                }
+
+                sessionStorage.setItem('name', this.name_input);
+                this.msg = "Name updated successfully.";
+                this.reload();
+            
+
             } catch (error) {
-                this.error = error;
+                if (error.response) {
+                    if (error.response.status === 401) {
+                        this.error = "Unauthorized";
+                    } else if (error.response.status === 409) {
+                        this.error = "Name already used.";
+                    } 
+                    else {
+                        this.error = error.response.data;
+                    }
+                    
+                    // this.error = error.response.data;
+                } else {
+                    this.error = error;
+                }
+               
             }
 
             this.loading = false;

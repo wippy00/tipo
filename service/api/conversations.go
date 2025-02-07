@@ -315,13 +315,15 @@ func (rt *_router) createConversation(w http.ResponseWriter, r *http.Request, ps
 
 	conversationRequest.Name = r.FormValue("name")
 
-	_, err = checkConversationName(conversationRequest.Name)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
 	conversationRequest.Cnv_type = r.FormValue("cnv_type")
+
+	if conversationRequest.Cnv_type == "group" {
+		_, err = checkConversationName(conversationRequest.Name)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
 
 	photo_multipart, handler, err := r.FormFile("photo")
 	if err != nil {

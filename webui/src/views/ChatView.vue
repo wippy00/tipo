@@ -12,7 +12,6 @@ export default {
         ChatHeader,
         ConversationCard,
         ConversationUserPhoto,
-
         MessageReactionPopup,
     },
     data: function () {
@@ -43,7 +42,6 @@ export default {
             replyMessage_data: null,
 
             refreshInterval: null
-
         }
 
     },
@@ -77,33 +75,26 @@ export default {
                 let messages = response.data
 
                 for (let i = 0; i < messages.length; i++) {
-                    let userData = this.getUser(messages[i].author);
+                    let userData = await this.getUser(messages[i].author);
                     messages[i].author = userData
 
-
-                    // expand forwoard
+                    // expand forward
                     if (messages[i].forward != 0) {
-                        if (messages[i].forward in this.participants) {
-                            messages[i].forward = this.getUser(messages[i].forward);
-                        }
-                        else {
-                            messages[i].forward = await this.fetchUser(messages[i].forward);
-                        }
+                        messages[i].forward = await this.getUser(messages[i].forward);
                     }
 
                     // expand reactions
                     if (messages[i].reactions) {
-                        messages[i].reactions.forEach(item => {
-                            item.user = this.getUser(item.user)
-                        })
+                        for (let item of messages[i].reactions) {
+                            item.user = await this.getUser(item.user)
+                        }
                     }
-
                 }
 
                 var messages_dict = {}
                 messages.forEach(message => messages_dict[message.id] = message);
 
-                // expand repy message
+                // expand reply message
                 messages.forEach(message => {
                     if (message.reply != 0) {
                         message.reply = messages_dict[message.reply]
@@ -175,30 +166,24 @@ export default {
             }
             this.loading = false
         },
-        getUser(user_id) {
-
-            try {
-                return this.participants[user_id]
-            } catch (e) {
-                this.error = e.toString()
+        async getUser(user_id) {
+            if (this.participants[user_id]) {
+                return this.participants[user_id];
             }
-        },
-        async fetchUser(user_id) {
-            this.auth_id = sessionStorage.getItem('id')
 
             try {
+                const auth_id = sessionStorage.getItem('id');
                 let response = await this.$axios.get("/users/" + user_id, {
                     headers: {
-                        authorization: this.auth_id
+                        authorization: auth_id
                     }
                 })
-                return response.data
-
+                this.participants[user_id] = response.data;
+                return response.data;
             } catch (e) {
-                this.error = e.toString()
+                this.error = e.toString();
+                return null;
             }
-
-
         },
         async sendMessage(event) {
             event.preventDefault()
@@ -570,10 +555,12 @@ export default {
                     </template>
 
                     <template v-slot:conversationMessage>
+
                         <form @submit.prevent="forwardMessage" class="col">
                             <input type="hidden" name="forward_conversation_id" :value="item.id">
                             <button class="btn btn-primary" type="submit">Forward message</button>
                         </form>
+
                     </template>
 
                 </ConversationCard>
