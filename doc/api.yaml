@@ -36,8 +36,8 @@ paths:
         content:
           application/json:
             schema:
-              type: object
               description: User name details to log in or to create a new user
+              type: object
               properties:
                 name:
                   $ref: "#/components/schemas/userName"
@@ -47,15 +47,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                description: Return user id
-                properties:
-                  id:
-                    $ref: "#/components/schemas/userId"
-                  name:
-                    $ref: "#/components/schemas/userName"
-                  photo:
-                    $ref: "#/components/schemas/userPhoto"
+                $ref: "#/components/schemas/User"
 
   /users:
     get:
@@ -76,6 +68,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/User"
                 default: []
+                minItems: 0
                 example: [{"id": 1,"name": "mariOne","photo": "null"},{"id": 2,"name": "rino","photo": "null"},{"id": 3,"name": "gianna","photo": "null"}]
         "401":
           $ref: "#/components/responses/401_Unauthorized"
@@ -138,6 +131,8 @@ paths:
                 $ref: "#/components/schemas/User"
         "401":
           $ref: "#/components/responses/401_Unauthorized"
+        "409":
+          $ref: "#/components/responses/409_Conflict"
 
   /profile/photo:
     put:
@@ -182,13 +177,12 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  conversations:
-                    type: array
-                    default: []
-                    items:
-                      $ref: "#/components/schemas/Conversation"
+                description: Return list of conversations
+                type: array
+                default: []
+                minItems: 0
+                items:
+                  $ref: "#/components/schemas/Conversation"
                 example: [{"id": 1,"name": "I salamini il ritorno 2","photo": "null","cnv_type": "group","participants": [{"id": 1,"name": "mariOne","photo": "null"},{"id": 2,"name": "rino","photo": "null"},{"id": 3,"name": "gianna","photo": "null"},{"id": 4,"name": "franco","photo": "null"},{"id": 5,"name": "cristina","photo": "null"}],"last_message": {"id": 17,"text": "Niente de che","photo": "null","author": 2,"recipient": 1,"forward": 0,"timestamp": "2025-01-23T16:35:29Z"}}]
 
         "401":
@@ -206,6 +200,7 @@ paths:
         content:
           multipart/form-data:
             schema:
+              description: Conversation details to create a new conversation
               type: object
               properties:
                 name:
@@ -215,6 +210,7 @@ paths:
                 cnv_type:
                   $ref: "#/components/schemas/conversationType"
                 participants:
+                  description: List of participants
                   type: array
                   items:
                     $ref: "#/components/schemas/userId"
@@ -227,7 +223,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Conversation"
-              example: {"id": 2,"name": "" ,"cnv_type": "chat","participants": [{"id": 2,"name": "rino","photo": "null"},{"id": 3,"name": "gianna","photo": "null"}],"last_message": "null"}
+              example: {"id": 2,"name": "" ,"cnv_type": "chat","participants": [{"id": 2,"name": "rino","photo": "null"},{"id": 3,"name": "gianna","photo": "null"}],"last_message": {"id": 4,"text": "Dove vai?","photo": "null","author": 3,"recipient": 2,"forward": 0,"timestamp": "2025-01-22T17:23:18Z"}}
         "401":
           $ref: "#/components/responses/401_Unauthorized"
         "409":
@@ -283,6 +279,7 @@ paths:
         content:
           application/json:
             schema:
+              description: Conversation name details to set a new name
               type: object
               properties:
                 new_name:
@@ -319,6 +316,7 @@ paths:
         content:
           multipart/form-data:
             schema:
+              description: Conversation photo details to set a new photo
               type: object
               properties:
                 photo:
@@ -414,6 +412,7 @@ paths:
               schema:
                 description: List of messages
                 type: array
+                minItems: 0
                 default: []
                 items:
                   $ref: "#/components/schemas/Message"
@@ -433,6 +432,7 @@ paths:
         content:
           multipart/form-data:
             schema:
+              description: Message details for sending a message
               type: object
               properties:
                 text:
@@ -581,7 +581,7 @@ components:
       description: user name properties
       type: string
       example: Mario
-      pattern: "^.*?$"
+      pattern: "^[a-zA-Z0-9]+$"
       minLength: 3
       maxLength: 30
 
@@ -615,29 +615,30 @@ components:
       maximum: 999
 
     conversationName:
-      description: conversation name properties
+      description: if it is a chat the name will be empty
       type: string
       example: I salamini
-      pattern: "^.*?$"
-      minLength: 3
+      pattern: "^[a-zA-Z0-9 ]+$"
+      minLength: 0
       maxLength: 50
 
     conversationPhoto:
       description: conversation photo properties
       type: string
       format: binary
+      minLength: 1
+      maxLength: 10485760 # 10 MB
 
     conversationType:
       description: conversation type properties
       type: string
       enum: [chat, group]
       example: group
-      minLength: 3
-      maxLength: 5
 
     conversationParticipant:
       description: conversation participant properties
       type: array
+      minItems: 1
       default: []
       items:
         $ref: "#/components/schemas/User"
@@ -677,14 +678,16 @@ components:
       description: message text properties
       type: string
       example: "Ciao"
-      minLength: 0
+      pattern: "^.+$" # tutto tranne stringa vuota
+      minLength: 1
       maxLength: 200
 
     messagePhoto:
       description: message photo properties
       type: string
       format: binary
-      example: "[]binary"
+      minLength: 1
+      maxLength: 10485760 # 10 MB
 
     messageTimestamp:
       description: date time of the message creation
@@ -710,7 +713,7 @@ components:
           # description: If forwarded, the user id of the original author
           $ref: "#/components/schemas/userId"
         reply:
-          # description: If reply, the message id of the replyed message
+          # description: If reply, the message id of the replied message
           $ref: "#/components/schemas/messageId"
         timestamp:
           $ref: "#/components/schemas/messageTimestamp"
@@ -735,7 +738,7 @@ components:
       description: reaction text properties
       type: string
       example: "🗿"
-      pattern: "^.+$" # tutto tranne stringa vuota
+      pattern: "^(😂|🗿|😐|👍|❤️|🔥|🎉|😢|😡)$"
       minLength: 1
       maxLength: 1
 

@@ -68,7 +68,17 @@ func (rt *_router) updateUserName(w http.ResponseWriter, r *http.Request, ps htt
 		return
 	}
 
+	_, err = checkUserName(respUser.Name)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	dbUser, err := rt.db.UpdateUserName(id, respUser.Name)
+	if err != nil && err.Error() == "user already exists" {
+		http.Error(w, err.Error(), http.StatusConflict)
+		return
+	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

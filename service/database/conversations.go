@@ -159,6 +159,10 @@ func (db *appdbimpl) GetConversation(id int64) (Conversation, error) {
 		lastParticipantID = participant.Id
 
 	}
+	err = rows.Err()
+	if err != nil {
+		return Conversation{}, fmt.Errorf("error getting conversation row: %w", err)
+	}
 
 	conversations = make([]Conversation, 0, len(conversation_map))
 	for _, conv := range conversation_map {

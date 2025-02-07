@@ -21,6 +21,13 @@ func (rt *_router) logIn(w http.ResponseWriter, r *http.Request, ps httprouter.P
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	_, err = checkUserName(loginReq.Name)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	user, isNew, err := rt.db.LoginUser(loginReq.Name)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

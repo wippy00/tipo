@@ -69,6 +69,12 @@ func (rt *_router) sendMessage(w http.ResponseWriter, r *http.Request, ps httpro
 
 	messageResp.Text = r.FormValue("text")
 
+	_, err = checkMessageText(messageResp.Text)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	photo_multipart, handler, err := r.FormFile("photo")
 	if err != nil {
 		if errors.Is(err, http.ErrMissingFile) {
@@ -264,6 +270,12 @@ func (rt *_router) reactMessage(w http.ResponseWriter, r *http.Request, ps httpr
 	var reaction reactions
 
 	err = json.NewDecoder(r.Body).Decode(&reaction)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	_, err = checkReactionText(reaction.Reaction)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

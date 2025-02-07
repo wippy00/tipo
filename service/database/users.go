@@ -112,6 +112,15 @@ func (db *appdbimpl) LoginUser(name string) (user User, isNew bool, err error) {
 func (db *appdbimpl) UpdateUserName(id int64, new_name string) (User, error) {
 	var user User
 
+	// check if user exists
+	user, exist, err := db.UserExistByName(new_name)
+	if err != nil {
+		return user, fmt.Errorf("error checking user existence: %w", err)
+	}
+	if exist {
+		return user, fmt.Errorf("user already exists")
+	}
+
 	res, err := db.c.Exec(`UPDATE users SET name = $1 WHERE id = $2`, new_name, id)
 	if err != nil {
 		return user, fmt.Errorf("database error updating user name: %w", err)

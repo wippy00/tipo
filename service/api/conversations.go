@@ -103,6 +103,12 @@ func (rt *_router) updateConversationName(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	_, err = checkConversationName(respConversation.Name)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	var string_id string = ps.ByName("conversation_id")
 	id, err := strconv.ParseInt(string_id, 10, 64)
 	if err != nil {
@@ -308,6 +314,12 @@ func (rt *_router) createConversation(w http.ResponseWriter, r *http.Request, ps
 	}
 
 	conversationRequest.Name = r.FormValue("name")
+
+	_, err = checkConversationName(conversationRequest.Name)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	conversationRequest.Cnv_type = r.FormValue("cnv_type")
 
