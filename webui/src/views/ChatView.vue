@@ -26,6 +26,7 @@ export default {
             messages: [],
             conversation: {},
             allConversations: [],
+            allUsersConversations: [],
             participants: {},
 
             message_text: "",
@@ -166,6 +167,48 @@ export default {
             }
             this.loading = false
         },
+        async fetchAllUsers() {
+            this.error = null
+
+            this.auth_id = sessionStorage.getItem('id')
+
+            try {
+                let response = await this.$axios.get("/users", {
+                    headers: {
+                        authorization: this.auth_id
+                    }
+                })
+
+                // rimuove auth user
+                let users = response.data.filter(user => user.id != this.auth_id)
+
+                // Assicurati che allConversations sia completamente caricato
+                await this.fetchAllConversation()
+
+                // rimuove utenti già presenti nelle conversazioni
+                users = users.filter(user => {
+                    return user.id != this.auth_id && !this.allConversations.some(conversation => {
+                        return conversation && conversation.cnv_type == 'chat' && conversation.participants && conversation.participants.some(participant => participant.id == user.id);
+                    });
+                });
+
+                for (let i = 0; i < users.length; i++) {
+                    this.allUsersConversations[i] = {
+                        cnv_type: 'chat',
+                        id: users[i].id,
+                        name: users[i].name,
+                        photo: users[i].photo,
+                        participants: [users[i]]
+                    }
+                }
+
+                // console.log(this.allUsersConversations)
+
+            } catch (e) {
+                this.error = e.toString()
+            }
+            this.loading = false
+        },
         async getUser(user_id) {
             if (this.participants[user_id]) {
                 return this.participants[user_id];
@@ -262,7 +305,8 @@ export default {
         showForwardMessageHandler(event) {
             this.showForwardMessage = true
             this.fetchAllConversation()
-            console.log(this.allConversations)
+            this.fetchAllUsers()
+            // console.log(this.allConversations)
             event.preventDefault()
             let message_id = event.target.message_id.value
             this.message_forward = message_id
@@ -270,7 +314,7 @@ export default {
 
         showMessageReactionPopupHandler(event) {
             event.preventDefault()
-            console.log("showMessageReactionPopup")
+            // console.log("showMessageReactionPopup")
             let message_id = event.target.message_id.value
             this.messageReactionPopupData = this.messages.find(message => message.id == message_id)
             this.showMessageReactionPopup = true
@@ -293,6 +337,7 @@ export default {
                 })
 
                 this.allConversations = {}
+                this.allUsersConversations = {}
                 this.message_forward = null
                 this.refresh()
 
@@ -300,6 +345,54 @@ export default {
                 this.error = e.toString()
             }
 
+        },
+
+        async forwardMessageNewChat(event) {
+            event.preventDefault()
+            let user_id_conv = event.target.forward_user_id.value
+            const auth_id = sessionStorage.getItem('id')
+            let conversation_id
+
+            
+
+            try {
+                var formData = new FormData();
+                formData.append('cnv_type', "chat");
+                formData.append('participants', JSON.stringify([parseInt(user_id_conv)]));
+
+                let response = await this.$axios.post("/conversations", formData,
+                    {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                            authorization: this.auth_id
+                        }
+                    })
+                conversation_id = response.data.id
+            } catch (e) {
+                this.error = e.toString()
+                console.log(this.error)
+                return
+            }
+            let user_id = this.message_forward
+            try {
+                let response = this.$axios.post("/conversations/" + conversation_id + "/messages/" + user_id + "/forward", {}, {
+                    headers: {
+                        authorization: auth_id
+                    }
+                })
+
+                this.allConversations = {}
+                this.allUsersConversations = {}
+                this.message_forward = null
+                this.refresh()
+
+                alert("Message Sent");
+
+                // this.$router.push('/chat/' + conversation_id)
+
+            } catch (e) {
+                this.error = e.toString()
+            }   
         },
 
         scrollToBottom() {
@@ -319,10 +412,6 @@ export default {
         // await this.fetchMessages(this.$route.params.id)
 
         // await this.fetchconversation(this.$route.params.id);
-
-        this.$nextTick(() => {
-            this.scrollToBottom();
-        });
 
         this.refreshInterval = setInterval(() => { // Salva l'ID dell'intervallo
             this.refresh();
@@ -520,8 +609,7 @@ export default {
         <!-- <button  @click="refresh" class="btn btn-primary" type="refresh" id="send">Refresh</button> -->
         <div>
             <div v-for="(item, index) in allConversations" :key="index" class="row card my-4">
-
-                <ConversationCard v-if="item.cnv_type == 'group'">
+                <ConversationCard v-if="item && item.cnv_type == 'group'">
 
                     <template v-slot:conversationImage>
                         <img v-if="item.photo" :src="'data:image/jpeg;base64,' + item.photo" width="100" height="100" class="rounded-1" style="object-fit: cover;">
@@ -561,6 +649,33 @@ export default {
                             <button class="btn btn-primary" type="submit">Forward message</button>
                         </form>
 
+                    </template>
+
+                </ConversationCard>
+            </div>
+            
+            <div v-if="allUsersConversations.length > 0">
+                <h1>Start a new conversation forwarding a message:</h1>
+                <small class="fw-lighter">Why not?</small>
+            </div>
+
+            <div v-for="(item, index) in allUsersConversations" :key="index" class="row card my-4">
+                <ConversationCard v-if="item && item.cnv_type == 'chat'">
+
+                    <template v-slot:conversationImage>
+                        <img v-if="item.photo" :src="'data:image/jpeg;base64,' + item.photo" width="100" height="100" class="rounded-1" style="object-fit: cover;">
+                        <img v-else :src="'https://placehold.co/100x100/orange/white?text=' + item.name" width="100" height="100" class="rounded-1" style="object-fit: cover;">
+                    </template>
+
+                    <template v-slot:conversationName>
+                        <h5 class="card-title text-capitalize">{{ item.name }}</h5>
+                    </template>
+
+                    <template v-slot:conversationMessage>
+                        <form @submit.prevent="forwardMessageNewChat" class="col">
+                            <input type="hidden" name="forward_user_id" :value="item.participants[0].id">
+                            <button class="btn btn-primary" type="submit">Forward message</button>
+                        </form>
                     </template>
 
                 </ConversationCard>

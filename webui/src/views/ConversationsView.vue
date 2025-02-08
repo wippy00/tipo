@@ -192,13 +192,9 @@ export default {
 
         this.refresh();
 
-        this.$nextTick(() => {
-            this.scrollToBottom();
-        });
-
         this.refreshInterval = setInterval(() => { 
             this.refresh();
-        }, 5000);
+        }, 1000);
     },
     unmounted() {
         clearInterval(this.refreshInterval)

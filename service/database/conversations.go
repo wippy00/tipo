@@ -452,6 +452,11 @@ func (db *appdbimpl) RemoveUserFromConversation(id_conversation int64, id_auth i
 
 	// if is a chat and it's the last user remove the chat
 	if !isGroup && userInConversation == 1 {
+		// _erroneous, err := db.c.Exec(`DELETE FROM messages WHERE recipient = $1`, id_conversation)
+		// if _erroneous != nil {
+		// 	return fmt.Errorf("database error removing messages of conversation: %w", err)
+		// }
+
 		_, erro := db.c.Exec(`DELETE FROM conversations_members WHERE id_conversations = $1`, id_conversation)
 		if erro != nil {
 			return fmt.Errorf("database error removing conversation: %w", err)
@@ -463,6 +468,10 @@ func (db *appdbimpl) RemoveUserFromConversation(id_conversation int64, id_auth i
 	}
 	// if is a group and there are no users left remove the group
 	if isGroup && userInConversation == 0 {
+		// _erroneous, err := db.c.Exec(`DELETE FROM messages WHERE recipient = $1`, id_conversation)
+		// if _erroneous != nil {
+		// 	return fmt.Errorf("database error removing messages of conversation: %w", err)
+		// }
 		_, erro := db.c.Exec(`DELETE FROM conversations WHERE id = $1`, id_conversation)
 		if erro != nil {
 			return fmt.Errorf("database error removing conversation: %w", err)
