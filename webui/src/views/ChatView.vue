@@ -1,5 +1,7 @@
 <script>
 // import ErrorMsg from '@/components/ErrorMsg.vue'
+import ModalError from '@/components/ModalError.vue';
+
 import ChatHeader from '@/components/ChatHeader.vue';
 
 import ConversationCard from '@/components/ConversationCard.vue';
@@ -13,6 +15,7 @@ export default {
         ConversationCard,
         ConversationUserPhoto,
         MessageReactionPopup,
+        ModalError,
     },
     data: function () {
         return {
@@ -54,9 +57,6 @@ export default {
             // await this.fetchconversation(this.$route.params.id);
             await this.fetchMessages(this.$route.params.id);
 
-            // this.$nextTick(() => {
-            //     this.scrollToBottom();
-            // });
         },
         async fetchAll(conversation_id) {
             await this.fetchconversation(conversation_id);
@@ -266,9 +266,7 @@ export default {
                 this.error = e.toString()
             }
 
-            this.$nextTick(() => {
-                this.scrollToBottom();
-            });
+            this.scrollToBottom();
         },
         async deleteMessage(event) {
             event.preventDefault()
@@ -322,8 +320,7 @@ export default {
         closeMessageReactionPopup() {
             this.showMessageReactionPopup = false;
         },
-
-        forwardMessage(event) {
+        async forwardMessage(event) {
             event.preventDefault()
             let conversation_id = event.target.forward_conversation_id.value
             let user_id = this.message_forward
@@ -395,6 +392,10 @@ export default {
             }   
         },
 
+        photo_inputHandler(event) {
+            this.message_photo = event.target.files[0];
+        },
+
         scrollToBottom() {
             window.scrollTo(0, document.body.scrollHeight);
         }
@@ -430,17 +431,16 @@ export default {
 
     <div class="container">
 
+        <ModalError v-if="error" :error="error" @close="error = null">
+            
+        </ModalError>
+
         <MessageReactionPopup v-if="showMessageReactionPopup" :message="messageReactionPopupData" @close="closeMessageReactionPopup"></MessageReactionPopup>
 
         <ConversationHeader :conversations="conversation" :auth_id="auth_id" />
         <ChatHeader :conversations="conversation" :auth_id="auth_id" />
 
         <div v-for="(message, index) in messages " :key="index">
-
-
-
-
-
 
             <!-- Se sono io -->
             <div v-if="message.author.id == auth_id" class="card my-4 bg-body-tertiary offset-md-7 col-5">
@@ -603,6 +603,7 @@ export default {
         <!-- Invio messaggio -->
         <form @submit.prevent="sendMessage" class="input-group mb-3">
             <input v-model="message_input" id="message_input" type="text" class="form-control" placeholder="Type a message" aria-label="Type a message" aria-describedby="message_input">
+            <input v-on:change="photo_inputHandler" id="message_photo" type="file" accept="image/*" class="form-control" placeholder="Type a message" aria-label="select profile photo" aria-describedby="photo_input">
             <button class="btn btn-primary" type="submit" id="send">Send</button>
         </form>
 
