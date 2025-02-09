@@ -6,6 +6,8 @@ export default {
 			errormsg: null,
 			loading: false,
 
+			aua:"",
+
 			logged_in: false,
 			name: ""
 		}
@@ -33,16 +35,30 @@ export default {
 
 			} catch (error) {
 				if (error.response) {
-                    this.error = error.response.data;
-                }
-                else {
-                    this.error = error;
-                }
+					this.error = error.response.data;
+				}
+				else {
+					this.error = error;
+				}
 				setTimeout(() => {
 					this.error = null;
 				}, 5000);
 			}
 
+		},
+
+		async test() {
+			try {
+				let response = await this.$axios.get("/")
+				this.aua = response.data;
+			} catch (error) {
+				if (error.response) {
+					this.aua = error.response.data;
+				}
+				else {
+					this.aua = error;
+				}
+			}
 		}
 	},
 	mounted() {
@@ -51,7 +67,6 @@ export default {
 		}
 
 		this.logged_in = sessionStorage.getItem('logged_in');
-		console.log(this.logged_in)
 	}
 }
 </script>
@@ -72,6 +87,9 @@ export default {
 					<button type="submit" class="btn btn-primary">Submit</button>
 				</form>
 			</div>
+
+			<button @click="test" class="btn btn-primary mt-5 p-5 visually-hidden-focusable">test</button>
+			<p>{{ aua }}</p>
 		</div>
 		<div v-else>
 			<h1 class="text-center">Welcome {{ name }}</h1>
