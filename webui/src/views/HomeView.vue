@@ -31,14 +31,13 @@ export default {
 				this.$emit("login-success")
 				this.$router.push({ path: '/conversations' })
 
-			} catch (event) {
-				if (event.response && event.response.status === 400) {
-					this.error = "name should has a length between 3 - 16";
-				} else if (event.response && event.response.status === 500) {
-					this.error = "An internal error occurred, please try again later.";
-				} else {
-					this.error = event.toString();
-				}
+			} catch (error) {
+				if (error.response) {
+                    this.error = error.response.data;
+                }
+                else {
+                    this.error = error;
+                }
 				setTimeout(() => {
 					this.error = null;
 				}, 5000);
@@ -60,7 +59,7 @@ export default {
 <template>
 	<div class="container">
 
-		<ErrorMsg v-if="error" :msg="errormsg"></ErrorMsg>
+		<ErrorMsg v-if="error" :msg="error"></ErrorMsg>
 
 		<div v-if="logged_in !== 'true'">
 			<div class="p-2">
