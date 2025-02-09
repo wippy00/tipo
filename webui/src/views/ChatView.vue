@@ -567,6 +567,13 @@ export default {
                         </span>
                     </div>
 
+                    <div v-if="message.read">
+                        <span class="badge bg-success m-1">Read</span>
+                    </div>
+                    <div v-else>
+                        <span class="badge bg-warning-subtle m-1">Recived</span>
+                    </div>
+
 
                 </div>
 
@@ -636,6 +643,13 @@ export default {
                     <div v-if="message.reactions">
                         <span v-for="(item, index) in message.reactions" :key="index" class="badge text-bg-primary m-1"><span class="text-capitalize">{{ item.user.name }}:</span> {{
                             item.reaction }}</span>
+                    </div>
+                    
+                    <div v-if="message.read">
+                        <span class="badge bg-success m-1">Read</span>
+                    </div>
+                    <div v-else>
+                        <span class="badge bg-warning-subtle m-1">Recived</span>
                     </div>
 
                 </div>

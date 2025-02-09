@@ -27,6 +27,7 @@ type Message struct {
 	Reply     int64      `json:"reply"`
 	Timestamp time.Time  `json:"timestamp"`
 	Reactions []Reaction `json:"reactions"`
+	Read      bool       `json:"read"`
 }
 
 type Reaction struct {

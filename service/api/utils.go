@@ -80,10 +80,6 @@ func checkMessageText(text string) (bool, error) {
 
 func checkReactionText(text string) (bool, error) {
 
-	if len(text) > 1 || len(text) < 1 {
-		return false, errors.New("reaction must be between 1 and 1 character")
-	}
-
 	match, err := regexp.MatchString(`^(😂|🗿|😐|👍|❤️|🔥|🎉|😢|😡)$`, text)
 	if err != nil {
 		return false, err

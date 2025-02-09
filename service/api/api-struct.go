@@ -85,6 +85,7 @@ type Message struct {
 	Reply     int64       `json:"reply"`
 	Timestamp time.Time   `json:"timestamp"`
 	Reactions []reactions `json:"reactions"`
+	Read      bool        `json:"read"`
 }
 
 func NewMessage(message database.Message) Message {
@@ -96,6 +97,7 @@ func NewMessage(message database.Message) Message {
 		Recipient: message.Recipient,
 		Forward:   message.Forward,
 		Timestamp: message.Timestamp,
+		Read:      message.Read,
 	}
 }
 
@@ -109,6 +111,7 @@ func DbMessage(message Message) database.Message {
 		Forward:   message.Forward,
 		Reply:     message.Reply,
 		Timestamp: message.Timestamp,
+		Read:      message.Read,
 	}
 }
 

@@ -6,14 +6,108 @@ import (
 	"fmt"
 )
 
+func (db *appdbimpl) SetMessageReadByUser(id_message int64, id_user int64) error {
+
+	isRead, err := db.IsMessageReadByUser(id_message, id_user)
+	if err != nil {
+		return fmt.Errorf("database error checking if message is read by user: %w", err)
+	}
+
+	if isRead {
+		return nil
+	}
+
+	_, err = db.c.Exec(`
+	INSERT INTO messages_readers (
+		id_message,
+		id_user
+	) VALUES ($1, $2);`, id_message, id_user)
+	if err != nil {
+		return fmt.Errorf("database error setting message read: %w", err)
+	}
+
+	return nil
+}
+
+func (db *appdbimpl) IsMessageReadByUser(id_message int64, id_user int64) (bool, error) {
+	var count int64
+	err := db.c.QueryRow(`
+	SELECT
+		COUNT(*)
+	FROM
+		messages_readers
+	WHERE
+		id_message = $1
+	AND
+		id_user = $2;
+	`, id_message, id_user).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+
+	if count == 0 {
+		return false, nil
+	} else {
+		return true, nil
+	}
+}
+
+func (db *appdbimpl) GetMessageReadness(id_nessage int64, id_conversation int64) (bool, error) {
+	var conversation Conversation
+
+	conversation, err := db.GetConversation(id_conversation)
+	if err != nil {
+		return false, fmt.Errorf("database error getting conversation: %w", err)
+	}
+
+	var isRead bool = true
+
+	for i := 0; i < len(conversation.Participants); i++ {
+		println(isRead)
+		if !isRead {
+			continue
+		}
+
+		isRead, err = db.IsMessageReadByUser(id_nessage, conversation.Participants[i].Id)
+		if err != nil {
+			return false, fmt.Errorf("database error checking if message is read by user: %w", err)
+		}
+	}
+
+	return isRead, nil
+
+}
+
+func (db *appdbimpl) IsMessageReadInConversation(message Message) (bool, error) {
+
+	var id_conversation int64 = message.Recipient
+
+	conversation, err := db.GetConversation(id_conversation)
+	if err != nil {
+		return false, fmt.Errorf("database error getting conversation: %w", err)
+	}
+
+	for i := 0; i < len(conversation.Participants); i++ {
+		isRead, err := db.IsMessageReadByUser(message.Id, conversation.Participants[i].Id)
+		if err != nil {
+			return false, fmt.Errorf("database error checking if message is read by user: %w", err)
+		}
+		if !isRead {
+			return false, nil
+		}
+	}
+
+	return true, nil
+}
+
 func (db *appdbimpl) GetReactionOfMessage(id_message int64) ([]Reaction, error) {
 	rows, err := db.c.Query(`
-		SELECT 
-			id_user, 
+		SELECT
+			id_user,
 			reaction
-		FROM 
-			reactions 
-		WHERE 
+		FROM
+			reactions
+		WHERE
 			id_message = $1;
 	`, id_message)
 	if err != nil {
@@ -250,6 +344,16 @@ func (db *appdbimpl) GetMessagesOfConversation(id_conversation int64, id_auth in
 		messages[i].Reactions, err = db.GetReactionOfMessage(messages[i].Id)
 		if err != nil {
 			return []Message{}, fmt.Errorf("database error getting reactions: %w", err)
+		}
+
+		err = db.SetMessageReadByUser(messages[i].Id, id_auth)
+		if err != nil {
+			return []Message{}, fmt.Errorf("database error setting message read: %w", err)
+		}
+
+		messages[i].Read, err = db.GetMessageReadness(messages[i].Id, id_conversation)
+		if err != nil {
+			return []Message{}, fmt.Errorf("database error checking if message is read by user: %w", err)
 		}
 	}
 
