@@ -63,7 +63,7 @@ func (db *appdbimpl) GetMessageReadness(id_nessage int64, id_conversation int64)
 	var isRead bool = true
 
 	for i := 0; i < len(conversation.Participants); i++ {
-		println(isRead)
+		// println(isRead)
 		if !isRead {
 			continue
 		}
