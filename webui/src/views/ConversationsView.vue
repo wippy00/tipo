@@ -1,11 +1,13 @@
 <script>
 import ConversationUserPhoto from '@/components/ConversationUserPhoto.vue'
 import ConversationCard from '@/components/ConversationCard.vue'
+import ModalError from '@/components/ModalError.vue'
 
 export default {
     components: {
         ConversationUserPhoto,
-        ConversationCard
+        ConversationCard,
+
 
     },
     data: function () {
@@ -14,11 +16,12 @@ export default {
             errormsg: null,
             loading: false,
 
-            conversations: null,
+            conversations: [],
 
             search: "",
-            users: null,
-            filteredUsers: null,
+            users: [],
+            searchbleUsers: [],
+            filteredUsers: [],
 
             auth_id: null,
 
@@ -27,7 +30,7 @@ export default {
             group_photo: null,
             checked_users: [],
 
-            refreshInterval: null
+            refreshInterval: 0
         }
     },
     watch: {
@@ -39,10 +42,10 @@ export default {
             }
 
             if (this.search === ":all") {
-                return this.filteredUsers = this.users
+                return this.filteredUsers = this.searchbleUsers
             }
 
-            this.filteredUsers = this.users.filter(user => {
+            this.filteredUsers = this.searchbleUsers.filter(user => {
                 return user.name.toLowerCase().includes(this.search.toLowerCase())
             })
             // console.log(this.filteredUsers)
@@ -50,9 +53,6 @@ export default {
     },
     methods: {
         async fetchConversations() {
-            
-            this.error = null
-
             this.auth_id = sessionStorage.getItem('id')
 
             try {
@@ -62,8 +62,6 @@ export default {
                     }
                 })
                 this.conversations = response.data
-
-                // console.log(this.conversations)
 
                 // expand the last message author
                 for (let i = 0; i < this.conversations.length; i++) {
@@ -94,17 +92,27 @@ export default {
                 this.conversations.sort((a, b) => {
                     const dateA = a.last_message ? new Date(a.last_message.timestamp) : 0;
                     const dateB = b.last_message ? new Date(b.last_message.timestamp) : 0;
-                    return dateB - dateA;
+                    if (dateB - dateA !== 0) {
+                        return dateB - dateA;
+                    }
+                    // Se i timestamp sono uguali, ordina per nome
+                    const nameA = (a.name || (a.participants[0].id !== this.auth_id ? a.participants[0].name : a.participants[1].name)).toLowerCase();
+                    const nameB = (b.name || (b.participants[0].id !== this.auth_id ? b.participants[0].name : b.participants[1].name)).toLowerCase();
+
+                    // Se anche i nomi sono uguali, ordina per ID
+                    if (nameA === nameB) {
+                        return a.id - b.id;
+                    }
+
+                    return nameA > nameB ? 1 : -1;
                 });
 
             } catch (e) {
-                this.error = e.toString()
+                this.errormsg = e.toString()
             }
-            this.loading = false
+
         },
         async fetchAllUsers() {
-            
-            this.error = null
 
             this.auth_id = sessionStorage.getItem('id')
 
@@ -116,15 +124,17 @@ export default {
                 })
                 this.users = response.data
 
+                this.searchbleUsers = this.users.filter(user => user.id != this.auth_id)
+
+
             } catch (e) {
-                this.error = e.toString()
+                this.errormsg = e.toString()
             }
-            this.loading = false
+
 
         },
 
         async startNewChat(user_id) {
-            // console.log(user_id)
             this.error = null
 
             this.auth_id = sessionStorage.getItem('id')
@@ -143,8 +153,13 @@ export default {
                         }
                     })
                 this.$router.push('/conversations/' + response.data.id)
-            } catch (e) {
-                this.error = e.toString()
+            } catch (error) {
+                if (error.response) {
+                    this.error = error.response.data;
+                }
+                else {
+                    this.error = error;
+                }
             }
         },
         async startNewGroup(event) {
@@ -167,8 +182,26 @@ export default {
                     }
                 })
                 this.$router.push('/conversations/' + response.data.id)
-            } catch (e) {
-                this.error = e.toString()
+            } catch (error) {
+                if (error.response) {
+                    this.error = error.response.data;
+                }
+                else {
+                    this.error = error;
+                }
+                
+                // if (error.response) {
+                //     if (error.response.status === 401) {
+                //         this.error = "Unauthorized";
+                //     } else if (error.response.status === 409) {
+                //         this.error = "Chat already exist.";
+                //     } 
+                //     else {
+                //         this.error = error.response.data;
+                //     }
+                // } else {
+                //     this.error = error;
+                // }
             }
         },
         file_inputHandler(event) {
@@ -192,9 +225,9 @@ export default {
 
         this.refresh();
 
-        this.refreshInterval = setInterval(() => { 
+        this.refreshInterval = setInterval(() => {
             this.refresh();
-        }, 1000);
+        }, 2000);
     },
     unmounted() {
         clearInterval(this.refreshInterval)
@@ -204,7 +237,7 @@ export default {
 
 <template>
     <div class="container">
-        <!-- <ErrorMsg v-if="error" :msg="errormsg"></ErrorMsg> -->
+        <ErrorMsg v-if="error" :msg="error"></ErrorMsg>
 
         <h1 v-if="loading">Loading...</h1>
         <div class="row">

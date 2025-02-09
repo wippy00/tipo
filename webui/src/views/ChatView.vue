@@ -32,7 +32,7 @@ export default {
             allUsersConversations: [],
             participants: {},
 
-            message_text: "",
+            message_input: "",
             message_photo: null,
             message_forward: 0,
             message_reply: 0,
@@ -74,6 +74,11 @@ export default {
                     }
                 })
                 let messages = response.data
+
+                if (messages == null || messages.length == 0) {
+                    messages = []
+                    return
+                }
 
                 for (let i = 0; i < messages.length; i++) {
                     let userData = await this.getUser(messages[i].author);
@@ -128,8 +133,13 @@ export default {
                 }
                 // console.log(this.participants)
 
-            } catch (e) {
-                this.error = e.toString()
+            } catch (error) {
+                if (error.response) {
+                    this.errormsg = error.response.data;
+                }
+                else {
+                    this.errormsg = error;
+                }
             }
         },
         async fetchAllConversation() {
@@ -162,8 +172,13 @@ export default {
                     }
                 }
 
-            } catch (e) {
-                this.error = e.toString()
+            } catch (error) {
+                if (error.response) {
+                    this.errormsg = error.response.data;
+                }
+                else {
+                    this.errormsg = error;
+                }
             }
             this.loading = false
         },
@@ -204,8 +219,13 @@ export default {
 
                 // console.log(this.allUsersConversations)
 
-            } catch (e) {
-                this.error = e.toString()
+            } catch (error) {
+                if (error.response) {
+                    this.errormsg = error.response.data;
+                }
+                else {
+                    this.errormsg = error;
+                }
             }
             this.loading = false
         },
@@ -223,9 +243,13 @@ export default {
                 })
                 this.participants[user_id] = response.data;
                 return response.data;
-            } catch (e) {
-                this.error = e.toString();
-                return null;
+            } catch (error) {
+                if (error.response) {
+                    this.errormsg = error.response.data;
+                }
+                else {
+                    this.errormsg = error;
+                }
             }
         },
         async sendMessage(event) {
@@ -262,8 +286,13 @@ export default {
 
                 this.refresh()
 
-            } catch (e) {
-                this.error = e.toString()
+            } catch (error) {
+                if (error.response) {
+                    this.error = error.response.data;
+                }
+                else {
+                    this.error = error;
+                }
             }
 
             this.scrollToBottom();
@@ -284,8 +313,13 @@ export default {
                 })
                 this.refresh()
 
-            } catch (e) {
-                this.error = e.toString()
+            } catch (error) {
+                if (error.response) {
+                    this.error = error.response.data;
+                }
+                else {
+                    this.error = error;
+                }
             }
         },
         replyMessage(event) {
@@ -338,8 +372,13 @@ export default {
                 this.message_forward = null
                 this.refresh()
 
-            } catch (e) {
-                this.error = e.toString()
+            } catch (error) {
+                if (error.response) {
+                    this.error = error.response.data;
+                }
+                else {
+                    this.error = error;
+                }
             }
 
         },
@@ -350,7 +389,7 @@ export default {
             const auth_id = sessionStorage.getItem('id')
             let conversation_id
 
-            
+
 
             try {
                 var formData = new FormData();
@@ -365,9 +404,13 @@ export default {
                         }
                     })
                 conversation_id = response.data.id
-            } catch (e) {
-                this.error = e.toString()
-                console.log(this.error)
+            } catch (error) {
+                if (error.response) {
+                    this.error = error.response.data;
+                }
+                else {
+                    this.error = error;
+                }
                 return
             }
             let user_id = this.message_forward
@@ -387,9 +430,14 @@ export default {
 
                 // this.$router.push('/chat/' + conversation_id)
 
-            } catch (e) {
-                this.error = e.toString()
-            }   
+            } catch (error) {
+                if (error.response) {
+                    this.error = error.response.data;
+                }
+                else {
+                    this.error = error;
+                }
+            }
         },
 
         photo_inputHandler(event) {
@@ -431,166 +479,168 @@ export default {
 
     <div class="container">
 
-        <ModalError v-if="error" :error="error" @close="error = null">
-            
-        </ModalError>
+        <ModalError v-if="error" :error="error" @close="error = null"> </ModalError>
+        <ModalError v-if="errormsg" :error="errormsg" @close="errormsg = null"> </ModalError>
 
         <MessageReactionPopup v-if="showMessageReactionPopup" :message="messageReactionPopupData" @close="closeMessageReactionPopup"></MessageReactionPopup>
 
         <ConversationHeader :conversations="conversation" :auth_id="auth_id" />
         <ChatHeader :conversations="conversation" :auth_id="auth_id" />
 
-        <div v-for="(message, index) in messages " :key="index">
 
-            <!-- Se sono io -->
-            <div v-if="message.author.id == auth_id" class="card my-4 bg-body-tertiary offset-md-7 col-5">
+        <div v-if="messages && messages.length > 0">
+            <div v-for="(message, index) in messages " :key="index">
 
-                <!-- sezione risposta messaggio -->
-                <div v-if="message.reply != 0">
-                    <h6 class="m-2">Reply To:</h6>
-                    <div class="card m-2 bg-body-tertiary p-2">
-                        <div class="d-flex">
-                            <img v-if="message.reply.author.photo" :src="'data:image/jpeg;base64,' + message.reply.author.photo" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
-                            <img v-else :src="'https://placehold.co/100x100/orange/white?text=' + message.reply.author.name" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
-                            <h6 class="card-title ms-2 mt-3 text-capitalize"> {{ message.reply.author.name }} </h6>
-                        </div>
-                        <div class="card-body">
-                            <img v-if="message.reply.photo" :src="'data:image/jpeg;base64,' + message.reply.photo" class="card-img-top rounded-3" alt="...">
-                            <p class="card-text mt-2">{{ message.reply.text }}</p>
-                        </div>
-                    </div>
-                </div>
+                <!-- Se sono io -->
+                <div v-if="message.author.id == auth_id" class="card my-4 bg-body-tertiary offset-md-7 col-5">
 
-
-                <!-- sezione header messaggio -->
-                <div class="d-flex">
-                    <img v-if="message.author.photo" :src="'data:image/jpeg;base64,' + message.author.photo" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
-                    <img v-else :src="'https://placehold.co/100x100/orange/white?text=' + message.author.name" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
-                    <h5 class="card-title ms-2 mt-3 text-capitalize"> {{ message.author.name }} </h5>
-                    <div class="ms-auto m-1 row">
-                        <form @submit.prevent="deleteMessage" class="col">
-                            <input type="hidden" name="message_id" :value="message.id">
-                            <button class="btn btn-primary" type="submit">Delete</button>
-                        </form>
-
-                        <form @submit.prevent="replyMessage" class="col">
-                            <input type="hidden" name="message_id" :value="message.id">
-                            <button class="btn btn-primary" type="submit">Reply</button>
-                        </form>
-
-                        <form @submit.prevent="showForwardMessageHandler" class="col">
-                            <input type="hidden" name="message_id" :value="message.id">
-                            <button class="btn btn-primary" type="submit">Forward</button>
-                        </form>
-
-                        <form @submit.prevent="showMessageReactionPopupHandler" class="col">
-                            <input type="hidden" name="message_id" :value="message.id">
-                            <button class="btn btn-primary" type="submit">React</button>
-                        </form>
-
-                    </div>
-                </div>
-
-                <!-- sezione forward messaggio -->
-                <div v-if="message.forward != 0">
-                    <div class="card m-2 bg-body-tertiary p-2">
-                        <h6 class="m-2">Forward from:</h6>
-                        <div class="d-flex">
-                            <img v-if="message.forward.photo" :src="'data:image/jpeg;base64,' + message.forward.photo" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
-                            <img v-else :src="'https://placehold.co/100x100/orange/white?text=' + message.forward.name" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
-                            <h6 class="card-title ms-2 mt-3 text-capitalize"> {{ message.forward.name }} </h6>
+                    <!-- sezione risposta messaggio -->
+                    <div v-if="message.reply != 0">
+                        <h6 class="m-2">Reply To:</h6>
+                        <div class="card m-2 bg-body-tertiary p-2">
+                            <div class="d-flex">
+                                <img v-if="message.reply.author.photo" :src="'data:image/jpeg;base64,' + message.reply.author.photo" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
+                                <img v-else :src="'https://placehold.co/100x100/orange/white?text=' + message.reply.author.name" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
+                                <h6 class="card-title ms-2 mt-3 text-capitalize"> {{ message.reply.author.name }} </h6>
+                            </div>
+                            <div class="card-body">
+                                <img v-if="message.reply.photo" :src="'data:image/jpeg;base64,' + message.reply.photo" class="card-img-top rounded-3" alt="...">
+                                <p class="card-text mt-2">{{ message.reply.text }}</p>
+                            </div>
                         </div>
                     </div>
+
+
+                    <!-- sezione header messaggio -->
+                    <div class="d-flex">
+                        <img v-if="message.author.photo" :src="'data:image/jpeg;base64,' + message.author.photo" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
+                        <img v-else :src="'https://placehold.co/100x100/orange/white?text=' + message.author.name" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
+                        <h5 class="card-title ms-2 mt-3 text-capitalize"> {{ message.author.name }} </h5>
+                        <div class="ms-auto m-1 row">
+                            <form @submit.prevent="deleteMessage" class="col">
+                                <input type="hidden" name="message_id" :value="message.id">
+                                <button class="btn btn-primary" type="submit">Delete</button>
+                            </form>
+
+                            <form @submit.prevent="replyMessage" class="col">
+                                <input type="hidden" name="message_id" :value="message.id">
+                                <button class="btn btn-primary" type="submit">Reply</button>
+                            </form>
+
+                            <form @submit.prevent="showForwardMessageHandler" class="col">
+                                <input type="hidden" name="message_id" :value="message.id">
+                                <button class="btn btn-primary" type="submit">Forward</button>
+                            </form>
+
+                            <form @submit.prevent="showMessageReactionPopupHandler" class="col">
+                                <input type="hidden" name="message_id" :value="message.id">
+                                <button class="btn btn-primary" type="submit">React</button>
+                            </form>
+
+                        </div>
+                    </div>
+
+                    <!-- sezione forward messaggio -->
+                    <div v-if="message.forward != 0">
+                        <div class="card m-2 bg-body-tertiary p-2">
+                            <h6 class="m-2">Forward from:</h6>
+                            <div class="d-flex">
+                                <img v-if="message.forward.photo" :src="'data:image/jpeg;base64,' + message.forward.photo" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
+                                <img v-else :src="'https://placehold.co/100x100/orange/white?text=' + message.forward.name" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
+                                <h6 class="card-title ms-2 mt-3 text-capitalize"> {{ message.forward.name }} </h6>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- sezione testo foto messaggio -->
+                    <div class="card-body">
+                        <img v-if="message.photo" :src="'data:image/jpeg;base64,' + message.photo" class="card-img-top rounded-3" alt="...">
+                        <p class="card-text mt-2">{{ message.text }}</p>
+                    </div>
+                    <small class="text-end p-2">{{ message.timestamp }}</small>
+
+                    <!-- sezione reactions messaggio -->
+                    <div v-if="message.reactions">
+                        <span v-for="(item, index) in message.reactions" :key="index" class="badge text-bg-primary m-1">
+                            <span class="text-capitalize">{{ item.user.name }}:</span>
+                            {{ item.reaction }}
+                        </span>
+                    </div>
+
+
                 </div>
 
-                <!-- sezione testo foto messaggio -->
-                <div class="card-body">
-                    <img v-if="message.photo" :src="'data:image/jpeg;base64,' + message.photo" class="card-img-top rounded-3" alt="...">
-                    <p class="card-text mt-2">{{ message.text }}</p>
-                </div>
-                <small class="text-end p-2">{{ message.timestamp }}</small>
+                <!-- Se sono gli altri -->
+                <div v-else class="card my-4 bg-body-tertiary col-5">
 
-                <!-- sezione reactions messaggio -->
-                <div v-if="message.reactions">
-                    <span v-for="(item, index) in message.reactions" :key="index" class="badge text-bg-primary m-1">
-                        <span class="text-capitalize">{{ item.user.name }}:</span>
-                        {{ item.reaction }}
-                    </span>
-                </div>
+                    <!-- sezione risposta messaggio -->
+                    <div v-if="message.reply != 0">
+                        <h6 class="m-2">Reply To:</h6>
+                        <div class="card m-2 bg-body-tertiary p-2">
+                            <div class="d-flex">
+                                <img v-if="message.reply.author.photo" :src="'data:image/jpeg;base64,' + message.reply.author.photo" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
+                                <img v-else :src="'https://placehold.co/100x100/orange/white?text=' + message.reply.author.name" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
+                                <h6 class="card-title ms-2 mt-3 text-capitalize"> {{ message.reply.author.name }} </h6>
+                            </div>
+                            <div class="card-body">
+                                <img v-if="message.reply.photo" :src="'data:image/jpeg;base64,' + message.reply.photo" class="card-img-top rounded-3" alt="...">
+                                <p class="card-text mt-2">{{ message.reply.text }}</p>
+                            </div>
+                        </div>
+                    </div>
 
+
+                    <!-- sezione header messaggio -->
+                    <div class="d-flex">
+                        <img v-if="message.author.photo" :src="'data:image/jpeg;base64,' + message.author.photo" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
+                        <img v-else :src="'https://placehold.co/100x100/orange/white?text=' + message.author.name" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
+                        <h5 class="card-title ms-2 mt-3 text-capitalize"> {{ message.author.name }} </h5>
+                        <div class="ms-auto m-1 row">
+                            <form @submit.prevent="replyMessage" class="col">
+                                <input type="hidden" name="message_id" :value="message.id">
+                                <button class="btn btn-primary" type="submit">Reply</button>
+                            </form>
+
+                            <form @submit.prevent="showForwardMessageHandler" class="col">
+                                <input type="hidden" name="message_id" :value="message.id">
+                                <button class="btn btn-primary" type="submit">Forward</button>
+                            </form>
+
+                            <form @submit.prevent="showMessageReactionPopupHandler" class="col">
+                                <input type="hidden" name="message_id" :value="message.id">
+                                <button class="btn btn-primary" type="submit">React</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- sezione forward messaggio -->
+                    <div v-if="message.forward != 0">
+                        <div class="card m-2 bg-body-tertiary p-2">
+                            <h6 class="m-2">Forward from:</h6>
+                            <div class="d-flex">
+                                <img v-if="message.forward.photo" :src="'data:image/jpeg;base64,' + message.forward.photo" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
+                                <img v-else :src="'https://placehold.co/100x100/orange/white?text=' + message.forward.name" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
+                                <h6 class="card-title ms-2 mt-3 text-capitalize"> {{ message.forward.name }} </h6>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- sezione testo foto messaggio -->
+                    <div class="card-body">
+                        <img v-if="message.photo" :src="'data:image/jpeg;base64,' + message.photo" class="card-img-top rounded-3" alt="...">
+                        <p class="card-text mt-2">{{ message.text }}</p>
+                    </div>
+                    <small class="text-end p-2">{{ message.timestamp }}</small>
+
+                    <!-- sezione reactions messaggio -->
+                    <div v-if="message.reactions">
+                        <span v-for="(item, index) in message.reactions" :key="index" class="badge text-bg-primary m-1"><span class="text-capitalize">{{ item.user.name }}:</span> {{
+                            item.reaction }}</span>
+                    </div>
+
+                </div>
 
             </div>
-
-            <!-- Se sono gli altri -->
-            <div v-else class="card my-4 bg-body-tertiary col-5">
-
-                <!-- sezione risposta messaggio -->
-                <div v-if="message.reply != 0">
-                    <h6 class="m-2">Reply To:</h6>
-                    <div class="card m-2 bg-body-tertiary p-2">
-                        <div class="d-flex">
-                            <img v-if="message.reply.author.photo" :src="'data:image/jpeg;base64,' + message.reply.author.photo" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
-                            <img v-else :src="'https://placehold.co/100x100/orange/white?text=' + message.reply.author.name" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
-                            <h6 class="card-title ms-2 mt-3 text-capitalize"> {{ message.reply.author.name }} </h6>
-                        </div>
-                        <div class="card-body">
-                            <img v-if="message.reply.photo" :src="'data:image/jpeg;base64,' + message.reply.photo" class="card-img-top rounded-3" alt="...">
-                            <p class="card-text mt-2">{{ message.reply.text }}</p>
-                        </div>
-                    </div>
-                </div>
-
-
-                <!-- sezione header messaggio -->
-                <div class="d-flex">
-                    <img v-if="message.author.photo" :src="'data:image/jpeg;base64,' + message.author.photo" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
-                    <img v-else :src="'https://placehold.co/100x100/orange/white?text=' + message.author.name" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
-                    <h5 class="card-title ms-2 mt-3 text-capitalize"> {{ message.author.name }} </h5>
-                    <div class="ms-auto m-1 row">
-                        <form @submit.prevent="replyMessage" class="col">
-                            <input type="hidden" name="message_id" :value="message.id">
-                            <button class="btn btn-primary" type="submit">Reply</button>
-                        </form>
-
-                        <form @submit.prevent="showForwardMessageHandler" class="col">
-                            <input type="hidden" name="message_id" :value="message.id">
-                            <button class="btn btn-primary" type="submit">Forward</button>
-                        </form>
-
-                        <form @submit.prevent="showMessageReactionPopupHandler" class="col">
-                            <input type="hidden" name="message_id" :value="message.id">
-                            <button class="btn btn-primary" type="submit">React</button>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- sezione forward messaggio -->
-                <div v-if="message.forward != 0">
-                    <div class="card m-2 bg-body-tertiary p-2">
-                        <h6 class="m-2">Forward from:</h6>
-                        <div class="d-flex">
-                            <img v-if="message.forward.photo" :src="'data:image/jpeg;base64,' + message.forward.photo" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
-                            <img v-else :src="'https://placehold.co/100x100/orange/white?text=' + message.forward.name" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
-                            <h6 class="card-title ms-2 mt-3 text-capitalize"> {{ message.forward.name }} </h6>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- sezione testo foto messaggio -->
-                <div class="card-body">
-                    <img v-if="message.photo" :src="'data:image/jpeg;base64,' + message.photo" class="card-img-top rounded-3" alt="...">
-                    <p class="card-text mt-2">{{ message.text }}</p>
-                </div>
-                <small class="text-end p-2">{{ message.timestamp }}</small>
-
-                <!-- sezione reactions messaggio -->
-                <div v-if="message.reactions">
-                    <span v-for="(item, index) in message.reactions" :key="index" class="badge text-bg-primary m-1"><span class="text-capitalize">{{ item.user.name }}:</span> {{
-                        item.reaction }}</span>
-                </div>
-
-            </div>
-
         </div>
 
         <!-- preview risposta -->
@@ -654,7 +704,7 @@ export default {
 
                 </ConversationCard>
             </div>
-            
+
             <div v-if="allUsersConversations.length > 0">
                 <h1>Start a new conversation forwarding a message:</h1>
                 <small class="fw-lighter">Why not?</small>
