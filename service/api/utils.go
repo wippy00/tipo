@@ -7,6 +7,11 @@ import (
 	"regexp"
 )
 
+const (
+	ErrUserNotInConversation = "user is not in conversation "
+	ErrMessageNotFound       = "message not found"
+)
+
 func validateFile(photo_multipart multipart.File, handler *multipart.FileHeader, err error) ([]byte, error) {
 	var photo []byte
 

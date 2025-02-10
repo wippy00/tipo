@@ -168,7 +168,7 @@ func (db *appdbimpl) GetMessage(id_message int64) (Message, error) {
 	)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return Message{}, fmt.Errorf("message not found")
+		return Message{}, fmt.Errorf(ErrMessageNotFound)
 	}
 	if err != nil {
 		return Message{}, fmt.Errorf("database error getting message: %w", err)
@@ -292,7 +292,7 @@ func (db *appdbimpl) GetMessagesOfConversation(id_conversation int64, id_auth in
 		return []Message{}, fmt.Errorf("database error checking if user is in conversation: %w", err)
 	}
 	if !isUserInConversation {
-		return []Message{}, fmt.Errorf("user is not in conversation")
+		return []Message{}, fmt.Errorf(ErrUserNotInConversation)
 	}
 
 	rows, err := db.c.Query(`
@@ -377,7 +377,7 @@ func (db *appdbimpl) SendMessage(id_conversation int64, id_auth int64, message M
 		return Message{}, fmt.Errorf("database error checking if user is in conversation: %w", err)
 	}
 	if !isUserInConversation {
-		return Message{}, fmt.Errorf("user is not in conversation")
+		return Message{}, fmt.Errorf(ErrUserNotInConversation)
 	}
 
 	// Check if reply message is in the conversation
@@ -420,7 +420,7 @@ func (db *appdbimpl) SendMessage(id_conversation int64, id_auth int64, message M
 func (db *appdbimpl) DeleteMessage(id_message int64, id_auth int64) error {
 	// Check if the message existss
 	message, err := db.GetMessage(id_message)
-	if err != nil && err.Error() == "message not found" {
+	if err != nil && err.Error() == ErrMessageNotFound {
 		return err
 	}
 	if err != nil {
@@ -491,7 +491,7 @@ func (db *appdbimpl) ForwardMessage(id_message int64, id_auth int64, id_conversa
 
 	// Check if the message existss
 	message, err := db.GetMessage(id_message)
-	if err != nil && err.Error() == "message not found" {
+	if err != nil && err.Error() == ErrMessageNotFound {
 		return Message{}, err
 	}
 	if err != nil {
@@ -504,7 +504,7 @@ func (db *appdbimpl) ForwardMessage(id_message int64, id_auth int64, id_conversa
 		return Message{}, fmt.Errorf("database error checking if user is in conversation: %w", err)
 	}
 	if !isUserInConversation {
-		return Message{}, fmt.Errorf("user is not in conversation")
+		return Message{}, fmt.Errorf(ErrUserNotInConversation)
 	}
 
 	// Check if the user is in the forwoarded conversation
@@ -513,7 +513,7 @@ func (db *appdbimpl) ForwardMessage(id_message int64, id_auth int64, id_conversa
 		return Message{}, fmt.Errorf("database error checking if user is in conversation: %w", err)
 	}
 	if !isUserInConversation {
-		return Message{}, fmt.Errorf("user is not in conversation")
+		return Message{}, fmt.Errorf(ErrUserNotInConversation)
 	}
 
 	message.Forward = message.Author
@@ -553,7 +553,7 @@ func (db *appdbimpl) ReactMessage(id_message int64, id_auth int64, reaction Reac
 
 	// Check if the message existss
 	message, err := db.GetMessage(id_message)
-	if err != nil && err.Error() == "message not found" {
+	if err != nil && err.Error() == ErrMessageNotFound {
 		return err
 	}
 	if err != nil {
@@ -568,7 +568,7 @@ func (db *appdbimpl) ReactMessage(id_message int64, id_auth int64, reaction Reac
 		return fmt.Errorf("database error checking if user is in conversation: %w", err)
 	}
 	if !isUserInConversation {
-		return fmt.Errorf("user is not in conversation")
+		return fmt.Errorf(ErrUserNotInConversation)
 	}
 
 	// Check if the user has already reacted to the message
@@ -612,7 +612,7 @@ func (db *appdbimpl) ReactMessage(id_message int64, id_auth int64, reaction Reac
 func (db *appdbimpl) UnReactMessage(id_message int64, id_auth int64) error {
 	// Check if the message existss
 	message, err := db.GetMessage(id_message)
-	if err != nil && err.Error() == "message not found" {
+	if err != nil && err.Error() == ErrMessageNotFound {
 		return err
 	}
 	if err != nil {
@@ -627,7 +627,7 @@ func (db *appdbimpl) UnReactMessage(id_message int64, id_auth int64) error {
 		return fmt.Errorf("database error checking if user is in conversation: %w", err)
 	}
 	if !isUserInConversation {
-		return fmt.Errorf("user is not in conversation")
+		return fmt.Errorf(ErrUserNotInConversation)
 	}
 
 	// Check if the user has already reacted to the message

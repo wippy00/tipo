@@ -2,6 +2,11 @@ package database
 
 import "time"
 
+const (
+	ErrUserNotInConversation = "user is not in conversation "
+	ErrMessageNotFound       = "message not found"
+)
+
 type User struct {
 	Id    int64  `json:"id"`
 	Name  string `json:"name"`

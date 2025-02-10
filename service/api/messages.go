@@ -33,7 +33,7 @@ func (rt *_router) getMessagesOfConversation(w http.ResponseWriter, r *http.Requ
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
-	if err != nil && err.Error() == "user is not in conversation" {
+	if err != nil && err.Error() == ErrUserNotInConversation {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
@@ -118,11 +118,11 @@ func (rt *_router) sendMessage(w http.ResponseWriter, r *http.Request, ps httpro
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
-	if err != nil && err.Error() == "user is not in conversation" {
+	if err != nil && err.Error() == ErrUserNotInConversation {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
-	if err != nil && err.Error() == "message not found" {
+	if err != nil && err.Error() == ErrMessageNotFound {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -169,7 +169,7 @@ func (rt *_router) deleteMessage(w http.ResponseWriter, r *http.Request, ps http
 	}
 
 	err = rt.db.DeleteMessage(message_id, auth_id)
-	if err != nil && err.Error() == "message not found" {
+	if err != nil && err.Error() == ErrMessageNotFound {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
@@ -214,7 +214,7 @@ func (rt *_router) forwardMessage(w http.ResponseWriter, r *http.Request, ps htt
 	}
 
 	message, err := rt.db.ForwardMessage(message_id, auth_id, conversation_id)
-	if err != nil && err.Error() == "message not found" {
+	if err != nil && err.Error() == ErrMessageNotFound {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
@@ -222,7 +222,7 @@ func (rt *_router) forwardMessage(w http.ResponseWriter, r *http.Request, ps htt
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
-	if err != nil && err.Error() == "user is not in conversation" {
+	if err != nil && err.Error() == ErrUserNotInConversation {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
@@ -282,11 +282,11 @@ func (rt *_router) reactMessage(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 
 	err = rt.db.ReactMessage(message_id, auth_id, DbReaction(reaction))
-	if err != nil && err.Error() == "message not found" {
+	if err != nil && err.Error() == ErrMessageNotFound {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
-	if err != nil && err.Error() == "user is not in conversation" {
+	if err != nil && err.Error() == ErrUserNotInConversation {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
@@ -321,11 +321,11 @@ func (rt *_router) unReactMessage(w http.ResponseWriter, r *http.Request, ps htt
 	}
 
 	err = rt.db.UnReactMessage(message_id, auth_id)
-	if err != nil && err.Error() == "message not found" {
+	if err != nil && err.Error() == ErrMessageNotFound {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
-	if err != nil && err.Error() == "user is not in conversation" {
+	if err != nil && err.Error() == ErrUserNotInConversation {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
