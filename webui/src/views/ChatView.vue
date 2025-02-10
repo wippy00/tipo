@@ -647,12 +647,12 @@ export default {
                             item.reaction }}</span>
                     </div>
                     
-                    <div v-if="message.read">
+                    <!-- <div v-if="message.read">
                         <span class="badge bg-success m-1">Read</span>
                     </div>
                     <div v-else>
                         <span class="badge bg-warning-subtle m-1">Recived</span>
-                    </div>
+                    </div> -->
 
                 </div>
 
