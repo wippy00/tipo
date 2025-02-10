@@ -68,11 +68,12 @@ func (rt *_router) sendMessage(w http.ResponseWriter, r *http.Request, ps httpro
 	}
 
 	messageResp.Text = r.FormValue("text")
-
-	_, err = checkMessageText(messageResp.Text)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+	if messageResp.Text != "" {
+		_, err = checkMessageText(messageResp.Text)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 	}
 
 	photo_multipart, handler, err := r.FormFile("photo")
@@ -110,6 +111,11 @@ func (rt *_router) sendMessage(w http.ResponseWriter, r *http.Request, ps httpro
 	conversation_id, err := strconv.ParseInt(string_conversation_id, 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if messageResp.Text == "" && messageResp.Photo == nil {
+		http.Error(w, "empty message", http.StatusBadRequest)
 		return
 	}
 

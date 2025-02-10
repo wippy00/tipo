@@ -254,7 +254,7 @@ export default {
         },
         async sendMessage(event) {
             event.preventDefault()
-            if (this.message_input === "") {
+            if (this.message_input === "" && this.message_photo === null) {
                 this.error = "Message cannot be empty.";
                 return;
             }
@@ -263,7 +263,9 @@ export default {
             const auth_id = sessionStorage.getItem('id')
 
             const formData = new FormData();
-            formData.append('text', this.message_input);
+            if (this.message_input) {
+                formData.append('text', this.message_input);
+            }
             if (this.message_photo) {
                 formData.append('photo', this.message_photo);
             }
