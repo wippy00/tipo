@@ -545,7 +545,7 @@ export default {
                     <!-- sezione forward messaggio -->
                     <div v-if="message.forward != 0">
                         <div class="card m-2 bg-body-tertiary p-2">
-                            <h6 class="m-2">Forward from:</h6>
+                            <h6 class="m-2">Forwarded, Source:</h6>
                             <div class="d-flex">
                                 <img v-if="message.forward.photo" :src="'data:image/jpeg;base64,' + message.forward.photo" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
                                 <img v-else :src="'https://placehold.co/100x100/orange/white?text=' + message.forward.name" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
@@ -625,7 +625,7 @@ export default {
                     <!-- sezione forward messaggio -->
                     <div v-if="message.forward != 0">
                         <div class="card m-2 bg-body-tertiary p-2">
-                            <h6 class="m-2">Forward from:</h6>
+                            <h6 class="m-2">Forwarded, Source:</h6>
                             <div class="d-flex">
                                 <img v-if="message.forward.photo" :src="'data:image/jpeg;base64,' + message.forward.photo" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
                                 <img v-else :src="'https://placehold.co/100x100/orange/white?text=' + message.forward.name" width="42" height="42" class="rounded-5 mt-2 ms-2" style="object-fit: cover;">
