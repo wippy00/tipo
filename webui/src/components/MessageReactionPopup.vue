@@ -91,13 +91,13 @@ export default {
                             <p class="card-text">{{ message.text }}</p>
 
                             <div v-if="message.reactions">
-                                <span v-for="item in message.reactions" class="badge text-bg-primary m-1"><span class="text-capitalize">{{ item.user.name }}:</span> {{ item.reaction }}</span>
+                                <span v-for="(item, index) in message.reactions" v-bind:key="index" class="badge text-bg-primary m-1"><span class="text-capitalize">{{ item.user.name }}:</span> {{ item.reaction }}</span>
                             </div>
                         </div>
                     </div>
 
                     <div class="d-flex mt-3">
-                        <button v-for="reaction in reactionsTypes" @click="handleReaction(reaction)" class="btn btn-outline-light me-1">{{ reaction }}</button>
+                        <button v-for="(reaction, index) in reactionsTypes" @click="handleReaction(reaction)" v-bind:key="index" class="btn btn-outline-light me-1">{{ reaction }}</button>
 
                     </div>
 

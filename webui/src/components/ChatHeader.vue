@@ -34,7 +34,7 @@ export default {
                 <div class="d-flex flex-column ms-2">
                     <h1 class="text-capitalize">{{ conversations.name }}</h1>
                     <ul class="list-inline">
-                        <li class="list-inline-item text-capitalize" v-for="user in conversations.participants">{{ user.name + " -" }}</li>
+                        <li class="list-inline-item text-capitalize" v-for="(user, index) in conversations.participants" v-bind:key="index">{{ user.name + " -" }}</li>
                         <li class="list-inline-item">...</li>
                     </ul>
                 </div>
